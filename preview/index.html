@@ -184,13 +184,22 @@ function submitTypedQuestion(){
  box.classList.remove("hidden");
  if(!question){box.textContent="Please type a civic question first.";return;}
  const q=question.toLowerCase();
- let topic="general civic information";
- if(/registr|register|enrol/.test(q)) topic="voter registration";
- else if(/pvc|voter.?s card|card collection|lost card/.test(q)) topic="Permanent Voter's Card (PVC)";
- else if(/polling unit|where.*vote|voting location/.test(q)) topic="polling unit information";
- else if(/result|winner|collation/.test(q)) topic="election results";
- else if(/report|complain|incident|violence|intimidat/.test(q)) topic="reporting an election-related issue";
- box.textContent="Thank you for your question.\\n\\nThis prototype has received your question, but it does not yet use a live AI service or automatically understand every question.\\n\\nFor "+topic+", please check the latest information directly with INEC: https://www.inecnigeria.org/\\n\\nFor a question outside these topics, use INEC's official contact or information channels. Treat this as a starting point, not a verified answer.";
+ let key="";
+ if(/registr|register|enrol|new voter/.test(q)) key="registration";
+ else if(/pvc|voter.?s card|card collection|lost card|replace.*card/.test(q)) key="pvc";
+ else if(/polling unit|where.*vote|voting location|vote centre|voting center/.test(q)) key="polling";
+ else if(/result|winner|collation|result sheet/.test(q)) key="results";
+ else if(/report|complain|incident|violence|intimidat|bribery|buying vote/.test(q)) key="report";
+ if(!key){
+  box.textContent="I could not match that question to one of the five topics in this demo. Please choose a topic from the menu above, or check INEC's official information channels: https://www.inecnigeria.org/\\n\\nThis prototype uses simple keyword matching, not live AI. Do not enter private voter details.";
+  return;
+ }
+ const item=guidance[key],lang=document.getElementById("language").value;
+ if(lang==="ib"){
+  box.textContent="Ibibio support is planned but not enabled in this prototype. Please use the English topic guidance and confirm details with INEC: "+item.url;
+  return;
+ }
+ box.textContent="Suggested topic: "+item.title+"\\n\\n"+item.text+"\\n\\nOfficial source: "+item.url+"\\n\\nNote: This is sample guidance, not a live AI answer. Confirm current procedures with INEC.";
 }
 function updateChecklist(){
  const steps=[...document.querySelectorAll(".verify-step")],done=steps.filter(step=>step.checked).length,total=steps.length;
