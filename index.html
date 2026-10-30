@@ -61,6 +61,14 @@ textarea{min-height:112px;resize:vertical}
 .hidden{display:none}
 .pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;background:#e7f4ef;color:#176b4d;font-size:.75rem;font-weight:850}
 .source{font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+.checklist{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:13px;background:#fbfdfe}
+.checklist h4{margin:0 0 3px;color:var(--navy);font-size:1rem}
+.check-progress{display:flex;justify-content:space-between;gap:10px;margin:13px 0 6px;font-size:.82rem;font-weight:750;color:var(--navy)}
+.progress-track{height:9px;border-radius:99px;background:#e5edf2;overflow:hidden}
+.progress-track span{display:block;width:0;height:100%;background:var(--teal);transition:width .2s}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;margin:0;border-bottom:1px solid #edf1f4;font-weight:550;cursor:pointer}
+.check-item input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--teal);flex:0 0 auto}
+.checklist .btn{margin-top:13px}
 .source a{font-weight:750}
 .official-link{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid var(--line);border-radius:13px;text-decoration:none;color:var(--navy);margin:12px 0}
 .official-link:hover{border-color:#8db8c7;background:#f8fbfd}
@@ -128,6 +136,19 @@ footer a{color:#f3c65f}
 <textarea id="claim" placeholder="Example: A message says the polling date has changed..."></textarea>
 <button class="btn primary" type="button" onclick="checkClaim()">Get verification steps <span aria-hidden="true">→</span></button>
 <div id="claimanswer" class="answer hidden" aria-live="polite"></div>
+<div class="checklist" aria-labelledby="checklist-title">
+<h4 id="checklist-title">Your verification checklist</h4>
+<p class="sub">Tick each step after you complete it.</p>
+<div class="check-progress"><span id="checkprogress">0 of 5 completed</span><span id="checkpercent">0%</span></div>
+<div class="progress-track" role="progressbar" aria-label="Verification checklist progress" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="progressbar"><span id="progressfill"></span></div>
+<label class="check-item"><input type="checkbox" class="verify-step"> I found the original source of the claim.</label>
+<label class="check-item"><input type="checkbox" class="verify-step"> I checked the date and location.</label>
+<label class="check-item"><input type="checkbox" class="verify-step"> I checked INEC's official website or verified channels.</label>
+<label class="check-item"><input type="checkbox" class="verify-step"> I compared the claim with credible independent reporting.</label>
+<label class="check-item"><input type="checkbox" class="verify-step"> I will not share it as fact if it remains unverified.</label>
+<button class="btn secondary" type="button" onclick="resetChecklist()">Reset checklist</button>
+<p class="source">Completing this checklist does not prove a claim is true. It helps you review it carefully.</p>
+</div>
 </section>
 
 <section class="panel" id="sources">
@@ -171,6 +192,19 @@ function submitTypedQuestion(){
  else if(/report|complain|incident|violence|intimidat/.test(q)) topic="reporting an election-related issue";
  box.textContent="Thank you for your question.\\n\\nThis prototype has received your question, but it does not yet use a live AI service or automatically understand every question.\\n\\nFor "+topic+", please check the latest information directly with INEC: https://www.inecnigeria.org/\\n\\nFor a question outside these topics, use INEC's official contact or information channels. Treat this as a starting point, not a verified answer.";
 }
+function updateChecklist(){
+ const steps=[...document.querySelectorAll(".verify-step")],done=steps.filter(step=>step.checked).length,total=steps.length;
+ document.getElementById("checkprogress").textContent=done+" of "+total+" completed";
+ document.getElementById("checkpercent").textContent=Math.round(done/total*100)+"%";
+ document.getElementById("progressfill").style.width=(done/total*100)+"%";
+ document.getElementById("progressbar").setAttribute("aria-valuenow",String(done));
+}
+function resetChecklist(){
+ document.querySelectorAll(".verify-step").forEach(step=>step.checked=false);
+ updateChecklist();
+}
+document.querySelectorAll(".verify-step").forEach(step=>step.addEventListener("change",updateChecklist));
+updateChecklist();
 function checkClaim(){
  const claim=document.getElementById("claim").value.trim(),box=document.getElementById("claimanswer");
  box.classList.remove("hidden");
