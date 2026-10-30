@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#102b46">
+<meta name="description" content="CivicConnect AI is an early civic-information prototype helping people find election guidance and verify claims through official sources.">
+<title>CivicConnect AI — Civic information, made clearer</title>
+<style>
+:root{--navy:#102b46;--navy2:#173d5c;--blue:#1769aa;--teal:#0f766e;--gold:#f3b63f;--bg:#f4f7fa;--paper:#fff;--ink:#182c3c;--muted:#647789;--line:#dce5ec;--soft:#eaf5f3;--shadow:0 14px 40px rgba(16,43,70,.08);--radius:20px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--blue)}
+button,input,select,textarea{font:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.skip{position:absolute;left:-9999px;top:8px;background:#fff;padding:10px 14px;z-index:10}.skip:focus{left:8px}
+header{background:var(--navy);color:#fff}
+.nav{max-width:1160px;margin:auto;padding:17px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;color:#fff;text-decoration:none;font-size:1.12rem;font-weight:850;letter-spacing:.2px}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:1.25rem;font-weight:900}
+.brand em{font-style:normal;color:var(--gold)}
+.navlinks{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.navlinks a{color:#e3edf5;text-decoration:none;font-size:.91rem;font-weight:650}
+.navlinks a:hover{color:var(--gold)}
+.status{font-size:.76rem;color:#e3edf5;border:1px solid #668097;border-radius:99px;padding:5px 11px}
+main{max-width:1160px;margin:auto;padding:34px 22px 64px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(125deg,#e8f2fa 0%,#eaf7f4 100%);border:1px solid #d8e8ed;border-radius:28px;padding:clamp(26px,5vw,54px);display:grid;grid-template-columns:1.4fr .8fr;gap:30px;align-items:center}
+.hero:after{content:"";position:absolute;width:300px;height:300px;border:1px solid rgba(15,118,110,.12);border-radius:50%;right:-130px;top:-160px;box-shadow:0 0 0 35px rgba(15,118,110,.035),0 0 0 70px rgba(15,118,110,.025);pointer-events:none}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--teal);font-size:.76rem;font-weight:850;text-transform:uppercase;letter-spacing:1.4px}
+.eyebrow:before{content:"";width:22px;height:2px;background:var(--gold)}
+h1{font-size:clamp(2.1rem,5vw,3.65rem);line-height:1.08;letter-spacing:-1.5px;color:var(--navy);margin:14px 0 17px;max-width:690px}
+.hero p{max-width:650px;color:#465d70;font-size:1.05rem;margin:0 0 24px}
+.actions{display:flex;gap:11px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:11px;padding:12px 17px;font-weight:760;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(23,105,170,.18)}
+.secondary{background:#fff;color:var(--navy);border:1px solid #d4e0e8}
+.hero-card{position:relative;z-index:1;background:var(--navy);color:#fff;border-radius:22px;padding:25px;min-height:230px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 18px 35px rgba(16,43,70,.18)}
+.hero-symbol{width:58px;height:58px;border-radius:18px;background:rgba(243,182,63,.15);color:var(--gold);display:grid;place-items:center;font-size:2rem}
+.hero-card strong{display:block;font-size:1.15rem;margin:20px 0 5px}
+.hero-card small{color:#c5d5e2}
+.trustline{display:flex;gap:10px;align-items:center;color:#d9e6ef;font-size:.82rem;margin-top:15px}
+.trustline span{width:8px;height:8px;border-radius:50%;background:#64c6a4}
+.notice{display:flex;gap:12px;align-items:flex-start;margin:20px 0 28px;padding:15px 17px;border:1px solid #ecdcae;border-radius:14px;background:#fff9e9;color:#6a541d;font-size:.9rem}
+.notice strong{color:#59430d}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:34px 0 16px}
+.section-head h2{margin:0;color:var(--navy);font-size:1.5rem;letter-spacing:-.3px}
+.section-head p{margin:3px 0 0;color:var(--muted);font-size:.92rem}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:23px;box-shadow:var(--shadow)}
+.panel-top{display:flex;align-items:flex-start;gap:13px;margin-bottom:17px}
+.panel-icon{flex:0 0 43px;width:43px;height:43px;border-radius:13px;background:#eaf2f8;color:var(--blue);display:grid;place-items:center;font-size:1.25rem;font-weight:850}
+.panel h3{font-size:1.16rem;color:var(--navy);margin:0 0 3px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+label{display:block;font-size:.9rem;font-weight:750;margin:13px 0 6px;color:#263e50}
+select,textarea{width:100%;border:1px solid #cbd8e2;border-radius:10px;padding:11px 12px;background:#fff;color:var(--ink)}
+textarea{min-height:112px;resize:vertical}
+.panel .btn{margin-top:15px}
+.answer{margin-top:15px;border-left:4px solid var(--teal);background:var(--soft);padding:15px;border-radius:0 12px 12px 0;white-space:pre-wrap;color:#23463f;font-size:.93rem}
+.hidden{display:none}
+.pill{display:inline-flex;align-items:center;border-radius:99px;padding:4px 10px;background:#e7f4ef;color:#176b4d;font-size:.75rem;font-weight:850}
+.source{font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+.source a{font-weight:750}
+.official-link{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid var(--line);border-radius:13px;text-decoration:none;color:var(--navy);margin:12px 0}
+.official-link:hover{border-color:#8db8c7;background:#f8fbfd}
+.official-link strong{display:block}
+.official-link small{display:block;color:var(--muted);font-size:.82rem}
+.arrow{font-size:1.25rem;color:var(--teal)}
+.features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 0;padding:0;list-style:none}
+.features li{position:relative;padding:11px 12px 11px 34px;background:#f6f9fb;border-radius:10px;font-size:.88rem;color:#40576a}
+.features li:before{content:"✓";position:absolute;left:12px;color:var(--teal);font-weight:900}
+footer{background:var(--navy);color:#c9d8e4;text-align:center;padding:26px 18px;font-size:.84rem}
+footer strong{color:#fff}
+footer a{color:#f3c65f}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.hero-card{min-height:175px}.grid{grid-template-columns:1fr}.nav{padding:14px 18px}.navlinks{gap:14px}main{padding:22px 16px 48px}.features{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.navlinks{width:100%;justify-content:space-between}.status{display:none}.features{grid-template-columns:1fr}.panel{padding:19px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+<nav class="nav" aria-label="Main navigation">
+<a class="brand" href="#" aria-label="CivicConnect AI home"><span class="logo" aria-hidden="true">C</span><span>CivicConnect <em>AI</em></span></a>
+<div class="navlinks"><a href="#assistant">Civic assistant</a><a href="#verify">Verify a claim</a><a href="#sources">Official source</a></div>
+<span class="status">Early prototype · Demo guidance</span>
+</nav>
+</header>
+<main id="main">
+<section class="hero" aria-labelledby="hero-title">
+<div>
+<div class="eyebrow">Civic information, made clearer</div>
+<h1 id="hero-title">Know where to check. Make informed choices.</h1>
+<p>A simple civic-information assistant concept that helps people find election-related guidance and learn how to verify claims through official sources.</p>
+<div class="actions"><button class="btn primary" type="button" onclick="document.getElementById('question').focus()">Ask a question <span aria-hidden="true">→</span></button><a class="btn secondary" href="#verify">Check a claim</a></div>
+</div>
+<aside class="hero-card" aria-label="CivicConnect approach">
+<div class="hero-symbol" aria-hidden="true">◎</div>
+<div><strong>Verified-source first</strong><small>Guidance, not a substitute for official announcements.</small><div class="trustline"><span aria-hidden="true"></span> Start with trusted information</div></div>
+</aside>
+</section>
+<div class="notice" role="note"><span aria-hidden="true">ⓘ</span><div><strong>Prototype notice:</strong> This demo uses a small set of sample answers and does not connect to INEC or any live AI service. Always confirm dates, eligibility, and procedures on official INEC channels.</div></div>
+
+<div class="section-head"><div><h2>Explore civic tools</h2><p>Practical starting points for common election-information questions.</p></div></div>
+<div class="grid">
+<section class="panel" id="assistant">
+<div class="panel-top"><span class="panel-icon" aria-hidden="true">?</span><div><h3>Ask a civic question</h3><p class="sub">Choose a topic to see sample guidance and an official source.</p></div></div>
+<label for="language">Language</label>
+<select id="language"><option value="en">English</option><option value="ib">Ibibio (planned; not enabled in this demo)</option></select>
+<label for="question">What do you want to know?</label>
+<select id="question"><option value="registration">Voter registration</option><option value="pvc">Permanent Voter's Card (PVC)</option><option value="polling">Polling unit information</option><option value="results">Election results</option><option value="report">How to report an issue</option></select>
+<button class="btn primary" type="button" onclick="answerQuestion()">Show guidance <span aria-hidden="true">→</span></button>
+<div id="answer" class="answer hidden" aria-live="polite"></div>
+</section>
+
+<section class="panel" id="verify">
+<div class="panel-top"><span class="panel-icon" aria-hidden="true">✓</span><div><h3>Check a claim carefully</h3><p class="sub">Use a simple process before sharing election-related information.</p></div></div>
+<p class="sub">This tool does not automatically label content true or false. It guides you through a safe verification process.</p>
+<label for="claim">Paste or describe the claim</label>
+<textarea id="claim" placeholder="Example: A message says the polling date has changed..."></textarea>
+<button class="btn primary" type="button" onclick="checkClaim()">Get verification steps <span aria-hidden="true">→</span></button>
+<div id="claimanswer" class="answer hidden" aria-live="polite"></div>
+</section>
+
+<section class="panel" id="sources">
+<div class="panel-top"><span class="panel-icon" aria-hidden="true">↗</span><div><h3>Official information</h3><p class="sub">Open the source directly and look for the latest announcement.</p></div></div>
+<span class="pill">Primary source</span>
+<a class="official-link" href="https://www.inecnigeria.org/" target="_blank" rel="noopener noreferrer"><span><strong>Independent National Electoral Commission (INEC)</strong><small>inecnigeria.org · Official website</small></span><span class="arrow" aria-hidden="true">↗</span></a>
+<p class="source">Confirm important details on the official website or verified INEC communication channels. Do not rely on forwarded messages alone.</p>
+</section>
+
+<section class="panel">
+<div class="panel-top"><span class="panel-icon" aria-hidden="true">✦</span><div><h3>Designed for accessibility</h3><p class="sub">Priorities for the next development stage.</p></div></div>
+<ul class="features"><li>Simple mobile-first layout</li><li>Plain-language answers</li><li>Potential English and Ibibio support after translation review</li><li>Clear source links and uncertainty notices</li><li>No political persuasion or candidate recommendations</li></ul>
+</section>
+</div>
+</main>
+<footer><strong>CivicConnect AI</strong> · Early prototype · Not an official INEC product<br>Built to support clearer access to civic information.</footer>
+<script>
+const guidance={
+registration:{title:"Voter registration",text:"Registration windows and eligibility rules can change. Check INEC's current announcements and official registration portal before taking action. Do not share your personal identification details with unofficial websites.",url:"https://www.inecnigeria.org/"},
+pvc:{title:"Permanent Voter's Card (PVC)",text:"For collection, replacement, or other PVC questions, consult current INEC guidance. Requirements and available services may vary by process and election cycle. Never pay an unofficial agent or publish your card details online.",url:"https://www.inecnigeria.org/"},
+polling:{title:"Polling unit information",text:"Use INEC's official tools or announcements to confirm your polling unit and any changes. Do not rely solely on a screenshot or forwarded message; check the date and original source.",url:"https://www.inecnigeria.org/"},
+results:{title:"Election results",text:"Check official INEC result announcements and published result resources. Early posts, cropped images, and unofficial tallies may be incomplete. Compare the location, timestamp, and original source.",url:"https://www.inecnigeria.org/"},
+report:{title:"Reporting an issue",text:"Record what happened, when and where it occurred, and preserve original evidence without putting yourself at risk. Use the relevant official reporting channel or contact appropriate authorities. Avoid publishing private information about other people.",url:"https://www.inecnigeria.org/"}
+};
+function answerQuestion(){
+ const key=document.getElementById("question").value,lang=document.getElementById("language").value,item=guidance[key],box=document.getElementById("answer");
+ box.classList.remove("hidden");
+ if(lang==="ib"){box.textContent="Ibibio support is planned but not enabled in this prototype. To avoid giving you an inaccurate translation, please use the English guidance and check the official INEC source.";return;}
+ box.textContent=item.title+"\n\n"+item.text+"\n\nOfficial source: "+item.url;
+}
+function checkClaim(){
+ const claim=document.getElementById("claim").value.trim(),box=document.getElementById("claimanswer");
+ box.classList.remove("hidden");
+ if(!claim){box.textContent="Enter a claim or message first. Do not include private voter details.";return;}
+ box.textContent="Claim received for a manual verification workflow. This prototype cannot determine whether it is true or false.\n\n1. Find the original post or announcement.\n2. Check whether INEC has published the same information on its official website or verified channels.\n3. Check the date, location, and context.\n4. Compare with credible independent reporting.\n5. If you cannot confirm it, label it “unverified” and avoid forwarding it as fact.\n\nOfficial starting point: https://www.inecnigeria.org/";
+}
+</script>
+</body>
+</html>
