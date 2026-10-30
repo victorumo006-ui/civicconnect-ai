@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CivicConnect Admin Dashboard</title>
+<style>
+:root{--navy:#10243a;--teal:#087f80;--gold:#d9a441;--ink:#203246;--muted:#64748b;--line:#e2e8f0;--bg:#f4f7fa;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Arial,Helvetica,sans-serif}
+header{background:var(--navy);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:19px}.brand span{color:#64d2c7}.topnote{font-size:12px;color:#d5e2ee}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:calc(100vh - 68px)}
+nav{background:#fff;border-right:1px solid var(--line);padding:22px 14px}
+nav p{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;padding:0 12px}
+nav a{display:block;text-decoration:none;color:#34465a;padding:11px 12px;border-radius:9px;margin:4px 0}
+nav a.active,nav a:hover{background:#e9f5f4;color:#086c6d;font-weight:700}
+main{padding:30px;max-width:1200px;width:100%;margin:auto}
+h1{font-size:27px;margin:0 0 5px;color:var(--navy)}.lead{margin:0 0 24px;color:var(--muted)}
+.notice{background:#fff8e8;border:1px solid #f1d99f;padding:13px 15px;border-radius:10px;margin-bottom:22px;color:#765315}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:26px}
+.card,.panel{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:18px}
+.card small{color:var(--muted);display:block}.metric{font-size:27px;font-weight:800;color:var(--navy);margin-top:8px}
+.panel{margin:16px 0}.panel h2{font-size:18px;margin:0 0 6px;color:var(--navy)}.panel p{color:var(--muted);margin:0}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.action{border:1px solid var(--line);border-radius:10px;padding:14px;text-decoration:none;color:var(--ink);display:block}
+.action strong{display:block;color:var(--teal);margin-bottom:3px}.action span{font-size:13px;color:var(--muted)}
+.status{display:inline-block;background:#edf2f7;color:#526174;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-top:10px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}nav{border-right:0;border-bottom:1px solid var(--line);padding:10px;display:flex;overflow:auto;gap:4px}nav p{display:none}nav a{white-space:nowrap;margin:0}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:20px 15px}}
+@media(max-width:430px){.cards,.actions{grid-template-columns:1fr}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<header><div class="brand">CivicConnect <span>Admin</span></div><div class="topnote">Dashboard layout · Early prototype</div></header>
+<div class="layout">
+<nav aria-label="Dashboard navigation">
+<p>Workspace</p>
+<a class="active" href="#overview">Overview</a>
+<a href="#guidance">Manage guidance</a>
+<a href="#questions">Questions</a>
+<a href="#verification">Claim verification</a>
+<a href="#settings">Settings</a>
+</nav>
+<main>
+<section id="overview">
+<h1>Admin Dashboard</h1>
+<p class="lead">A central place to organise CivicConnect information and review platform activity.</p>
+<div class="notice"><strong>Setup stage:</strong> This is the visual dashboard layout only. It is not connected to Supabase, does not display live user data, and does not yet provide secure administrator sign-in.</div>
+<div class="cards">
+<div class="card"><small>Questions received</small><div class="metric">—</div><span class="status">Not connected</span></div>
+<div class="card"><small>Guidance topics</small><div class="metric">5</div><span class="status">Sample content</span></div>
+<div class="card"><small>Claims reviewed</small><div class="metric">—</div><span class="status">Not connected</span></div>
+<div class="card"><small>Admin users</small><div class="metric">—</div><span class="status">Not connected</span></div>
+</div>
+</section>
+<section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Review and maintain the sample guidance shown for voter registration, PVC, polling units, election results and reporting issues.</p><div class="actions"><a class="action" href="#guidance"><strong>Voter registration</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>PVC information</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>Polling unit information</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>Election results &amp; reporting</strong><span>Sample guidance · Editing not enabled</span></a></div></section>
+<section class="panel" id="questions"><h2>User questions</h2><p>Future area for reviewing questions submitted by visitors. The current public prototype does not save typed questions to a database.</p><span class="status">Database connection pending</span></section>
+<section class="panel" id="verification"><h2>Claim verification resources</h2><p>Future area for maintaining official links, verification steps and trusted public information resources. Checklist activity is currently local to the visitor's browser.</p><span class="status">Management not enabled</span></section>
+<section class="panel" id="settings"><h2>Administrator settings</h2><p>Secure sign-in, administrator roles and activity records will be added before this dashboard is used for real administration.</p><span class="status">Authentication not connected</span></section>
+<footer>CivicConnect AI · Admin prototype · Not an official INEC product</footer>
+</main>
+</div>
+</body>
+</html>
