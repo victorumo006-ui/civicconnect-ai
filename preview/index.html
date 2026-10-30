@@ -108,10 +108,17 @@ footer a{color:#f3c65f}
 <div class="panel-top"><span class="panel-icon" aria-hidden="true">?</span><div><h3>Ask a civic question</h3><p class="sub">Choose a topic to see sample guidance and an official source.</p></div></div>
 <label for="language">Language</label>
 <select id="language"><option value="en">English</option><option value="ib">Ibibio (planned; not enabled in this demo)</option></select>
-<label for="question">What do you want to know?</label>
+<label for="question">Choose a topic</label>
 <select id="question"><option value="registration">Voter registration</option><option value="pvc">Permanent Voter's Card (PVC)</option><option value="polling">Polling unit information</option><option value="results">Election results</option><option value="report">How to report an issue</option></select>
-<button class="btn primary" type="button" onclick="answerQuestion()">Show guidance <span aria-hidden="true">→</span></button>
+<button class="btn primary" type="button" onclick="answerQuestion()">Show topic guidance <span aria-hidden="true">→</span></button>
 <div id="answer" class="answer hidden" aria-live="polite"></div>
+<div class="question-entry">
+<label for="typedquestion">Or type your own civic question</label>
+<textarea id="typedquestion" placeholder="Type your civic question here..."></textarea>
+<p class="source">Do not enter your PVC number, passwords, phone numbers, or other private details.</p>
+<button class="btn primary" type="button" onclick="submitTypedQuestion()">Submit question <span aria-hidden="true">→</span></button>
+<div id="typedanswer" class="answer hidden" aria-live="polite"></div>
+</div>
 </section>
 
 <section class="panel" id="verify">
@@ -150,6 +157,19 @@ function answerQuestion(){
  box.classList.remove("hidden");
  if(lang==="ib"){box.textContent="Ibibio support is planned but not enabled in this prototype. To avoid giving you an inaccurate translation, please use the English guidance and check the official INEC source.";return;}
  box.textContent=item.title+"\n\n"+item.text+"\n\nOfficial source: "+item.url;
+}
+function submitTypedQuestion(){
+ const question=document.getElementById("typedquestion").value.trim(),box=document.getElementById("typedanswer");
+ box.classList.remove("hidden");
+ if(!question){box.textContent="Please type a civic question first.";return;}
+ const q=question.toLowerCase();
+ let topic="general civic information";
+ if(/registr|register|enrol/.test(q)) topic="voter registration";
+ else if(/pvc|voter.?s card|card collection|lost card/.test(q)) topic="Permanent Voter's Card (PVC)";
+ else if(/polling unit|where.*vote|voting location/.test(q)) topic="polling unit information";
+ else if(/result|winner|collation/.test(q)) topic="election results";
+ else if(/report|complain|incident|violence|intimidat/.test(q)) topic="reporting an election-related issue";
+ box.textContent="Thank you for your question.\\n\\nThis prototype has received your question, but it does not yet use a live AI service or automatically understand every question.\\n\\nFor "+topic+", please check the latest information directly with INEC: https://www.inecnigeria.org/\\n\\nFor a question outside these topics, use INEC's official contact or information channels. Treat this as a starting point, not a verified answer.";
 }
 function checkClaim(){
  const claim=document.getElementById("claim").value.trim(),box=document.getElementById("claimanswer");
