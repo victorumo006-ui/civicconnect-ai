@@ -185,11 +185,11 @@ function submitTypedQuestion(){
  if(!question){box.textContent="Please type a civic question first.";return;}
  const q=question.toLowerCase();
  let key="";
- if(/registr|register|enrol|new voter/.test(q)) key="registration";
+ if(/report|complain|incident|violence|intimidat|bribery|buying vote|witness(ed)?|threat(en|ened)?|harass/.test(q)) key="report";
+ else if(/registr|register|enrol|new voter/.test(q)) key="registration";
  else if(/pvc|voter.?s card|card collection|lost card|replace.*card/.test(q)) key="pvc";
  else if(/polling unit|where.*vote|voting location|vote centre|voting center/.test(q)) key="polling";
  else if(/result|winner|collation|result sheet/.test(q)) key="results";
- else if(/report|complain|incident|violence|intimidat|bribery|buying vote/.test(q)) key="report";
  if(!key){
   box.textContent="I could not match that question to one of the five topics in this demo. Please choose a topic from the menu above, or check INEC's official information channels: https://www.inecnigeria.org/\\n\\nThis prototype uses simple keyword matching, not live AI. Do not enter private voter details.";
   return;
