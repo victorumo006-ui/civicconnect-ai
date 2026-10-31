@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </div>
 <div id="app" class="hidden">
 <div class="layout">
-<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
+<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
 <main>
 <section id="overview"><h1>Admin Dashboard</h1><p class="lead">Manage CivicConnect information and review submitted questions.</p>
 <div id="welcome" class="message"></div>
@@ -58,6 +58,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
 <form id="guidanceForm"><div class="formgrid"><div><label>Topic</label><select id="gTopic" required><option value="voter_registration">Voter registration</option><option value="pvc">PVC information</option><option value="polling_unit">Polling unit information</option><option value="election_results">Election results</option><option value="reporting_issue">Reporting an issue</option></select></div><div><label>Title</label><input id="gTitle" required maxlength="160"></div></div><label>Guidance content</label><textarea id="gContent" rows="4" required></textarea><label>Official source URL (optional)</label><input id="gSource" type="url" placeholder="https://www.inecnigeria.org/"><label><input id="gPublished" type="checkbox" style="width:auto;margin-right:7px">Publish this guidance</label><br><button type="submit">Save guidance</button></form><div id="guidanceMessage" role="status"></div><div id="guidanceList"></div></section>
 <section class="panel" id="questions"><h2>User questions</h2><p>Questions submitted through a connected form can be reviewed here.</p><button class="secondary" id="refreshQuestions" type="button">Refresh questions</button><div id="questionsList"></div></section>
+<section class="panel" id="feedback"><h2>Citizen feedback</h2><p>Review feedback totals for published administrator responses. Individual browser identifiers and voting records are not displayed.</p><button class="secondary" id="refreshFeedback" type="button">Refresh feedback</button><div class="cards" style="margin-top:15px"><div class="card"><small>Total votes</small><div class="metric" id="feedbackTotal">—</div></div><div class="card"><small>Helpful</small><div class="metric" id="feedbackHelpful">—</div></div><div class="card"><small>Not helpful</small><div class="metric" id="feedbackNotHelpful">—</div></div><div class="card"><small>Helpfulness rate</small><div class="metric" id="feedbackRate">—</div></div></div><div id="feedbackMessage" role="status"></div><div id="feedbackList"></div></section>
 <section class="panel" id="verification"><h2>Claim verification resources</h2><p>The public claim checklist remains a manual verification aid. Completing it does not prove a claim is true. Official source: <a href="https://www.inecnigeria.org/" target="_blank" rel="noopener">INEC website</a>.</p><span class="status">Manual checklist · Not automated fact-checking</span></section>
 <section class="panel" id="settings"><h2>Administrator settings</h2><p id="adminEmail"></p><button class="secondary" id="logout" type="button">Sign out</button></section>
 <footer>CivicConnect AI · Admin prototype · Not an official INEC product</footer>
@@ -69,11 +70,50 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zaQn8YrEfJJ2NGuf-ni2wA_u7jp0Hez
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
 function showMessage(id, message, isError=false){const el=$(id);el.textContent=message;el.className=isError?'message error':'message';}
+
+async function loadFeedbackDashboard(){
+ const list=$('feedbackList');
+ showMessage('feedbackMessage','Loading feedback…');
+ try{
+  const [{data:totals,error:totalsError},{data:responses,error:responsesError}]=await Promise.all([
+   client.rpc('get_civic_feedback_totals'),
+   client.from('civic_responses').select('id,question_text,response,status').eq('status','published').order('updated_at',{ascending:false})
+  ]);
+  if(totalsError)throw totalsError;
+  if(responsesError)throw responsesError;
+  const published=responses||[];
+  const publishedIds=new Set(published.map(r=>r.id));
+  const rows=(totals||[]).filter(t=>publishedIds.has(t.response_id));
+  const helpful=rows.reduce((sum,r)=>sum+Number(r.helpful_count||0),0);
+  const notHelpful=rows.reduce((sum,r)=>sum+Number(r.not_helpful_count||0),0);
+  const total=helpful+notHelpful;
+  $('feedbackTotal').textContent=total;
+  $('feedbackHelpful').textContent=helpful;
+  $('feedbackNotHelpful').textContent=notHelpful;
+  $('feedbackRate').textContent=(total?Math.round(helpful/total*100):0)+'%';
+  list.innerHTML='';
+  published.forEach(response=>{
+   const row=rows.find(t=>t.response_id===response.id);
+   const yes=row?Number(row.helpful_count||0):0;
+   const no=row?Number(row.not_helpful_count||0):0;
+   const card=document.createElement('div');card.className='item';
+   const title=document.createElement('h3');title.textContent=response.question_text||'Citizen question';
+   const summary=document.createElement('p');summary.textContent='Helpful: '+yes+' · Not helpful: '+no+' · Total: '+(yes+no);
+   const rate=document.createElement('small');rate.textContent='Helpfulness rate: '+((yes+no)?Math.round(yes/(yes+no)*100):0)+'%';
+   card.append(title,summary,rate);list.append(card);
+  });
+  if(!published.length){list.textContent='No published responses are available for feedback reporting yet.';}
+  showMessage('feedbackMessage','Feedback dashboard updated successfully.');
+ }catch(error){
+  showMessage('feedbackMessage','Could not load feedback dashboard: '+(error?.message||String(error)),true);
+ }
+}
+
 async function loadDashboard(user){
   const {data:admin,error:adminError}=await client.from('civic_admin_users').select('user_id,role').eq('user_id',user.id).maybeSingle();
   if(adminError||!admin){await client.auth.signOut();showMessage('loginMessage','This account is not authorised as a CivicConnect administrator.',true);return;}
   $('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('adminEmail').textContent='Signed in as '+(user.email||'administrator');$('welcome').textContent='Administrator access verified. Live data is loaded from your CivicConnect database.';
-  await Promise.all([loadGuidance(),loadQuestions()]);
+  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard()]);
 }
 async function loadGuidance(){
  const {data,error}=await client.from('civic_guidance').select('*').order('created_at',{ascending:false});
@@ -139,6 +179,7 @@ async function loadQuestions(){
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();showMessage('loginMessage','Signing in…');const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){showMessage('loginMessage',error.message,true);return;}await loadDashboard(data.user);});
 $('guidanceForm').addEventListener('submit',async e=>{e.preventDefault();const record={topic:$('gTopic').value,title:$('gTitle').value.trim(),content:$('gContent').value.trim(),source_url:$('gSource').value.trim()||null,is_published:$('gPublished').checked};const {error}=await client.from('civic_guidance').insert(record);if(error){showMessage('guidanceMessage','Could not save: '+error.message,true);return;}e.target.reset();showMessage('guidanceMessage','Guidance saved successfully.');await loadGuidance();});
 $('refreshQuestions').addEventListener('click',loadQuestions);
+$('refreshFeedback').addEventListener('click',loadFeedbackDashboard);
 $('logout').addEventListener('click',async()=>{await client.auth.signOut();$('app').classList.add('hidden');$('loginWrap').classList.remove('hidden');$('password').value='';showMessage('loginMessage','You have signed out.');});
 client.auth.getSession().then(({data})=>{if(data.session)loadDashboard(data.session.user);});
 </script>
