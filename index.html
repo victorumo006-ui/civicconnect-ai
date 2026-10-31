@@ -112,6 +112,8 @@ footer a{color:#f3c65f}
 
 <section class="panel" id="published-guidance" aria-labelledby="published-title"><div class="panel-top"><span class="panel-icon" aria-hidden="true">✓</span><div><h3 id="published-title">Published civic guidance</h3><p class="sub">Information published by the CivicConnect administrator.</p></div></div><div id="publishedGuidance" class="source" aria-live="polite">Loading published guidance…</div></section>
 
+<section class="panel" id="administrator-responses" aria-labelledby="responses-title"><div class="panel-top"><span class="panel-icon" aria-hidden="true">↩</span><div><h3 id="responses-title">Published administrator responses</h3><p class="sub">Questions and answers shared by the CivicConnect administrator. Only published responses appear here.</p></div></div><div id="publishedResponses" aria-live="polite"><p class="source">Loading published responses…</p></div></section>
+
 <div class="section-head"><div><h2>Explore civic tools</h2><p>Practical starting points for common election-information questions.</p></div></div>
 <div class="grid">
 <section class="panel" id="assistant">
@@ -172,6 +174,25 @@ footer a{color:#f3c65f}
 const civicClient=window.supabase.createClient("https://gzukfhoqwnsflfzsqvcy.supabase.co","sb_publishable_zaQn8YrEfJJ2NGuf-ni2wA_u7jp0Hez");
 async function loadPublishedGuidance(){const box=document.getElementById("publishedGuidance");try{const {data,error}=await civicClient.from("civic_guidance").select("topic,title,content,source_url,created_at").eq("is_published",true).order("created_at",{ascending:false});if(error)throw error;if(!data||!data.length){box.textContent="No published guidance is available yet.";return;}box.innerHTML="";data.forEach(item=>{const article=document.createElement("article");article.className="item";const heading=document.createElement("h3");heading.textContent=item.title;const body=document.createElement("p");body.textContent=item.content;article.append(heading,body);if(item.source_url){const link=document.createElement("a");link.href=item.source_url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open official source";article.append(link);}box.append(article);});}catch(error){box.textContent="Published guidance could not be loaded right now. Please check the official INEC website for current information.";}}
 loadPublishedGuidance();
+async function loadPublishedResponses(){
+ const box=document.getElementById("publishedResponses");
+ try{
+  const {data,error}=await civicClient.from("civic_responses").select("question_text,response,created_at").eq("status","published").not("question_text","is",null).order("created_at",{ascending:false});
+  if(error)throw error;
+  if(!data||!data.length){box.textContent="No published administrator responses are available yet.";return;}
+  box.innerHTML="";
+  data.forEach(item=>{
+   const article=document.createElement("article");article.className="item";
+   const questionHeading=document.createElement("h4");questionHeading.textContent="Citizen question";
+   const question=document.createElement("p");question.textContent=item.question_text;
+   const answerHeading=document.createElement("h4");answerHeading.textContent="Administrator response";
+   const answer=document.createElement("p");answer.textContent=item.response;
+   const date=document.createElement("small");date.className="source";date.textContent="Published "+new Date(item.created_at).toLocaleString();
+   article.append(questionHeading,question,answerHeading,answer,date);box.append(article);
+  });
+ }catch(error){box.textContent="Published responses could not be loaded right now. Please check the official INEC website for current information.";}
+}
+loadPublishedResponses();
 const guidance={
 registration:{title:"Voter registration",text:"Registration windows and eligibility rules can change. Check INEC's current announcements and official registration portal before taking action. Do not share your personal identification details with unofficial websites.",url:"https://www.inecnigeria.org/"},
 pvc:{title:"Permanent Voter's Card (PVC)",text:"For collection, replacement, or other PVC questions, consult current INEC guidance. Requirements and available services may vary by process and election cycle. Never pay an unofficial agent or publish your card details online.",url:"https://www.inecnigeria.org/"},
