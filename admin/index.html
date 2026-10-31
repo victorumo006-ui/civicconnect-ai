@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </div>
 <div id="app" class="hidden">
 <div class="layout">
-<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#analytics">Analytics</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
+<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#analytics">Analytics</a><a href="#usage">Visitor usage</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
 <main>
 <section id="overview"><h1>Admin Dashboard</h1><p class="lead">Manage CivicConnect information and review submitted questions.</p>
 <div id="welcome" class="message"></div>
@@ -56,6 +56,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><small>Admin access</small><div class="metric">Verified</div><span class="status">Signed-in administrator</span></div>
 </div></section>
 <section class="panel" id="analytics"><h2>Platform analytics</h2><p>Live summary of records stored in the CivicConnect database. These figures measure recorded activity, not unique visitors.</p><button class="secondary" id="refreshAnalytics" type="button">Refresh analytics</button><div id="analyticsMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Total questions</small><div class="metric" id="analyticsQuestions">—</div></div><div class="card"><small>Published guidance</small><div class="metric" id="analyticsGuidance">—</div></div><div class="card"><small>Published responses</small><div class="metric" id="analyticsResponses">—</div></div><div class="card"><small>Questions in last 7 days</small><div class="metric" id="analyticsRecent">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Most common question topics</h3><div id="topicAnalytics"></div><h3 style="color:var(--navy);margin:18px 0 8px">Question activity — last 7 days</h3><div id="weeklyAnalytics"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Privacy and measurement note: CivicConnect does not currently record unique visitors or page views. Topic and activity summaries are based only on submitted questions.</p></section>
+<section class="panel" id="usage"><h2>Visitor and platform usage</h2><p>Anonymous browser and section activity recorded by the public CivicConnect prototype.</p><button class="secondary" id="refreshUsage" type="button">Refresh usage</button><div id="usageMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Approx. unique browsers (30 days)</small><div class="metric" id="usageVisitors">—</div></div><div class="card"><small>Visits today</small><div class="metric" id="usageToday">—</div></div><div class="card"><small>Visits (30 days)</small><div class="metric" id="usageMonth">—</div></div><div class="card"><small>Tracked interactions (30 days)</small><div class="metric" id="usageInteractions">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Most viewed sections and tools</h3><div id="usageSections"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Measurement note: visitor counts are approximate unique browser identifiers stored in the browser, not verified people. Visits count page loads. Section and tool activity is recorded when a section is viewed or a tool is used. Browser storage may be unavailable or cleared, and tracking can be blocked. No names, email addresses, phone numbers or IP addresses are collected.</p></section>
 <section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
 <form id="guidanceForm"><div class="formgrid"><div><label>Topic</label><select id="gTopic" required><option value="voter_registration">Voter registration</option><option value="pvc">PVC information</option><option value="polling_unit">Polling unit information</option><option value="election_results">Election results</option><option value="reporting_issue">Reporting an issue</option></select></div><div><label>Title</label><input id="gTitle" required maxlength="160"></div></div><label>Guidance content</label><textarea id="gContent" rows="4" required></textarea><label>Official source URL (optional)</label><input id="gSource" type="url" placeholder="https://www.inecnigeria.org/"><label><input id="gPublished" type="checkbox" style="width:auto;margin-right:7px">Publish this guidance</label><br><button type="submit">Save guidance</button></form><div id="guidanceMessage" role="status"></div><div id="guidanceList"></div></section>
 <section class="panel" id="questions"><h2>User questions</h2><p>Questions submitted through a connected form can be reviewed here.</p><button class="secondary" id="refreshQuestions" type="button">Refresh questions</button><div id="questionsList"></div></section>
@@ -113,6 +114,42 @@ async function loadAnalytics(){
  }catch(error){showMessage('analyticsMessage','Could not load analytics: '+(error?.message||String(error)),true);}
 }
 
+
+async function loadUsageAnalytics(){
+ showMessage('usageMessage','Loading visitor and usage records…');
+ try{
+  const {data,error}=await client.from('civic_usage_events').select('visitor_key,session_key,section_name,created_at').order('created_at',{ascending:false}).limit(10000);
+  if(error)throw error;
+  const rows=data||[];
+  const now=new Date();
+  const todayStart=new Date(now);todayStart.setHours(0,0,0,0);
+  const monthStart=new Date(now);monthStart.setDate(monthStart.getDate()-29);monthStart.setHours(0,0,0,0);
+  const recent=rows.filter(x=>new Date(x.created_at)>=monthStart);
+  const today=rows.filter(x=>new Date(x.created_at)>=todayStart);
+  const visitsToday=today.filter(x=>x.section_name==='page_view');
+  const visitsRecent=recent.filter(x=>x.section_name==='page_view');
+  $('usageVisitors').textContent=new Set(recent.map(x=>x.visitor_key)).size;
+  $('usageToday').textContent=visitsToday.length;
+  $('usageMonth').textContent=visitsRecent.length;
+  $('usageInteractions').textContent=recent.filter(x=>x.section_name!=='page_view').length;
+  const counts={};
+  recent.filter(x=>x.section_name&&x.section_name!=='page_view').forEach(x=>{counts[x.section_name]=(counts[x.section_name]||0)+1;});
+  const box=$('usageSections');box.innerHTML='';
+  const labels={'section:assistant':'Civic assistant section','section:verify':'Claim verification section','section:sources':'Official sources section','section:published-guidance':'Published guidance section','section:administrator-responses':'Administrator responses section','assistant:topic_guidance':'Topic guidance requested','assistant:typed_question':'Typed questions submitted','verification:checklist_request':'Verification steps requested'};
+  const sorted=Object.entries(counts).sort((x,y)=>y[1]-x[1]);
+  if(!sorted.length){box.textContent='No section or tool interactions recorded in the last 30 days yet.';}
+  const max=Math.max(1,...sorted.map(x=>x[1]));
+  sorted.forEach(([key,count])=>{
+   const row=document.createElement('div');row.style.cssText='margin:10px 0';
+   const label=document.createElement('div');label.style.cssText='display:flex;justify-content:space-between;gap:10px;font-size:13px';label.textContent=(labels[key]||key.replaceAll('_',' '))+' · '+count;
+   const track=document.createElement('div');track.style.cssText='height:9px;background:#e8eef3;border-radius:20px;overflow:hidden;margin-top:5px';
+   const bar=document.createElement('div');bar.style.cssText='height:100%;background:#087f80;border-radius:20px;width:'+Math.round(count/max*100)+'%';
+   track.append(bar);row.append(label,track);box.append(row);
+  });
+  showMessage('usageMessage','Visitor and usage analytics updated successfully.');
+ }catch(error){showMessage('usageMessage','Could not load visitor analytics: '+(error?.message||String(error)),true);}
+}
+
 async function loadFeedbackDashboard(){
  const list=$('feedbackList');
  showMessage('feedbackMessage','Loading feedback…');
@@ -166,7 +203,7 @@ async function loadDashboard(user){
   const {data:admin,error:adminError}=await client.from('civic_admin_users').select('user_id,role').eq('user_id',user.id).maybeSingle();
   if(adminError||!admin){await client.auth.signOut();showMessage('loginMessage','This account is not authorised as a CivicConnect administrator.',true);return;}
   $('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('adminEmail').textContent='Signed in as '+(user.email||'administrator');$('welcome').textContent='Administrator access verified. Live data is loaded from your CivicConnect database.';
-  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard(),loadAnalytics()]);
+  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard(),loadAnalytics(),loadUsageAnalytics()]);
 }
 async function loadGuidance(){
  const {data,error}=await client.from('civic_guidance').select('*').order('created_at',{ascending:false});
@@ -234,6 +271,7 @@ $('guidanceForm').addEventListener('submit',async e=>{e.preventDefault();const r
 $('refreshQuestions').addEventListener('click',loadQuestions);
 $('refreshFeedback').addEventListener('click',loadFeedbackDashboard);
 $('refreshAnalytics').addEventListener('click',loadAnalytics);
+$('refreshUsage').addEventListener('click',loadUsageAnalytics);
 $('logout').addEventListener('click',async()=>{await client.auth.signOut();$('app').classList.add('hidden');$('loginWrap').classList.remove('hidden');$('password').value='';showMessage('loginMessage','You have signed out.');});
 client.auth.getSession().then(({data})=>{if(data.session)loadDashboard(data.session.user);});
 </script>
