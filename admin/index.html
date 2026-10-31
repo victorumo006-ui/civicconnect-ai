@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </div>
 <div id="app" class="hidden">
 <div class="layout">
-<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
+<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#analytics">Analytics</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
 <main>
 <section id="overview"><h1>Admin Dashboard</h1><p class="lead">Manage CivicConnect information and review submitted questions.</p>
 <div id="welcome" class="message"></div>
@@ -55,6 +55,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><small>New questions</small><div class="metric" id="newCount">—</div><span class="status">Awaiting review</span></div>
 <div class="card"><small>Admin access</small><div class="metric">Verified</div><span class="status">Signed-in administrator</span></div>
 </div></section>
+<section class="panel" id="analytics"><h2>Platform analytics</h2><p>Live summary of records stored in the CivicConnect database. These figures measure recorded activity, not unique visitors.</p><button class="secondary" id="refreshAnalytics" type="button">Refresh analytics</button><div id="analyticsMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Total questions</small><div class="metric" id="analyticsQuestions">—</div></div><div class="card"><small>Published guidance</small><div class="metric" id="analyticsGuidance">—</div></div><div class="card"><small>Published responses</small><div class="metric" id="analyticsResponses">—</div></div><div class="card"><small>Questions in last 7 days</small><div class="metric" id="analyticsRecent">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Most common question topics</h3><div id="topicAnalytics"></div><h3 style="color:var(--navy);margin:18px 0 8px">Question activity — last 7 days</h3><div id="weeklyAnalytics"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Privacy and measurement note: CivicConnect does not currently record unique visitors or page views. Topic and activity summaries are based only on submitted questions.</p></section>
 <section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
 <form id="guidanceForm"><div class="formgrid"><div><label>Topic</label><select id="gTopic" required><option value="voter_registration">Voter registration</option><option value="pvc">PVC information</option><option value="polling_unit">Polling unit information</option><option value="election_results">Election results</option><option value="reporting_issue">Reporting an issue</option></select></div><div><label>Title</label><input id="gTitle" required maxlength="160"></div></div><label>Guidance content</label><textarea id="gContent" rows="4" required></textarea><label>Official source URL (optional)</label><input id="gSource" type="url" placeholder="https://www.inecnigeria.org/"><label><input id="gPublished" type="checkbox" style="width:auto;margin-right:7px">Publish this guidance</label><br><button type="submit">Save guidance</button></form><div id="guidanceMessage" role="status"></div><div id="guidanceList"></div></section>
 <section class="panel" id="questions"><h2>User questions</h2><p>Questions submitted through a connected form can be reviewed here.</p><button class="secondary" id="refreshQuestions" type="button">Refresh questions</button><div id="questionsList"></div></section>
@@ -70,6 +71,47 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zaQn8YrEfJJ2NGuf-ni2wA_u7jp0Hez
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
 function showMessage(id, message, isError=false){const el=$(id);el.textContent=message;el.className=isError?'message error':'message';}
+
+
+async function loadAnalytics(){
+ showMessage('analyticsMessage','Loading platform analytics…');
+ try{
+  const [{data:questions,error:qError},{data:guidance,error:gError},{data:responses,error:rError}]=await Promise.all([
+   client.from('civic_questions').select('topic,created_at'),
+   client.from('civic_guidance').select('id,is_published'),
+   client.from('civic_responses').select('id,status')
+  ]);
+  if(qError)throw qError;if(gError)throw gError;if(rError)throw rError;
+  const qs=questions||[],gs=guidance||[],rs=responses||[];
+  const publishedGuidance=gs.filter(x=>x.is_published).length;
+  const publishedResponses=rs.filter(x=>x.status==='published').length;
+  const cutoff=Date.now()-7*24*60*60*1000;
+  const recent=qs.filter(x=>new Date(x.created_at).getTime()>=cutoff).length;
+  $('analyticsQuestions').textContent=qs.length;
+  $('analyticsGuidance').textContent=publishedGuidance;
+  $('analyticsResponses').textContent=publishedResponses;
+  $('analyticsRecent').textContent=recent;
+  const labels={voter_registration:'Voter registration',pvc:'PVC information',polling_unit:'Polling unit',election_results:'Election results',reporting_issue:'Reporting an issue'};
+  const counts={};qs.forEach(x=>{const key=x.topic||'other';counts[key]=(counts[key]||0)+1;});
+  const topicBox=$('topicAnalytics');topicBox.innerHTML='';
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length){topicBox.textContent='No submitted questions to analyse yet.';}
+  sorted.forEach(([key,value])=>{
+   const row=document.createElement('div');row.style.cssText='margin:10px 0';
+   const label=document.createElement('div');label.style.cssText='display:flex;justify-content:space-between;gap:10px;font-size:13px';label.textContent=(labels[key]||key.replaceAll('_',' '))+' · '+value;
+   const track=document.createElement('div');track.style.cssText='height:9px;background:#e8eef3;border-radius:20px;overflow:hidden;margin-top:5px';
+   const bar=document.createElement('div');bar.style.cssText='height:100%;background:#087f80;border-radius:20px;width:'+Math.round(value/Math.max(1,qs.length)*100)+'%';
+   track.append(bar);row.append(label,track);topicBox.append(row);
+  });
+  const weekBox=$('weeklyAnalytics');weekBox.innerHTML='';
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const key=d.toLocaleDateString();days.push({key,label:d.toLocaleDateString(undefined,{weekday:'short'}),count:0});}
+  const dayMap=new Map(days.map(d=>[d.key,d]));
+  qs.forEach(x=>{const key=new Date(x.created_at).toLocaleDateString();if(dayMap.has(key))dayMap.get(key).count++;});
+  const max=Math.max(1,...days.map(d=>d.count));
+  days.forEach(d=>{const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:42px 1fr 28px;gap:9px;align-items:center;margin:8px 0;font-size:12px';const name=document.createElement('span');name.textContent=d.label;const track=document.createElement('div');track.style.cssText='height:10px;background:#e8eef3;border-radius:20px;overflow:hidden';const bar=document.createElement('div');bar.style.cssText='height:100%;background:#d9a441;width:'+Math.round(d.count/max*100)+'%';track.append(bar);const value=document.createElement('strong');value.textContent=d.count;row.append(name,track,value);weekBox.append(row);});
+  showMessage('analyticsMessage','Analytics updated successfully.');
+ }catch(error){showMessage('analyticsMessage','Could not load analytics: '+(error?.message||String(error)),true);}
+}
 
 async function loadFeedbackDashboard(){
  const list=$('feedbackList');
@@ -124,7 +166,7 @@ async function loadDashboard(user){
   const {data:admin,error:adminError}=await client.from('civic_admin_users').select('user_id,role').eq('user_id',user.id).maybeSingle();
   if(adminError||!admin){await client.auth.signOut();showMessage('loginMessage','This account is not authorised as a CivicConnect administrator.',true);return;}
   $('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('adminEmail').textContent='Signed in as '+(user.email||'administrator');$('welcome').textContent='Administrator access verified. Live data is loaded from your CivicConnect database.';
-  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard()]);
+  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard(),loadAnalytics()]);
 }
 async function loadGuidance(){
  const {data,error}=await client.from('civic_guidance').select('*').order('created_at',{ascending:false});
@@ -191,6 +233,7 @@ $('loginForm').addEventListener('submit',async e=>{e.preventDefault();showMessag
 $('guidanceForm').addEventListener('submit',async e=>{e.preventDefault();const record={topic:$('gTopic').value,title:$('gTitle').value.trim(),content:$('gContent').value.trim(),source_url:$('gSource').value.trim()||null,is_published:$('gPublished').checked};const {error}=await client.from('civic_guidance').insert(record);if(error){showMessage('guidanceMessage','Could not save: '+error.message,true);return;}e.target.reset();showMessage('guidanceMessage','Guidance saved successfully.');await loadGuidance();});
 $('refreshQuestions').addEventListener('click',loadQuestions);
 $('refreshFeedback').addEventListener('click',loadFeedbackDashboard);
+$('refreshAnalytics').addEventListener('click',loadAnalytics);
 $('logout').addEventListener('click',async()=>{await client.auth.signOut();$('app').classList.add('hidden');$('loginWrap').classList.remove('hidden');$('password').value='';showMessage('loginMessage','You have signed out.');});
 client.auth.getSession().then(({data})=>{if(data.session)loadDashboard(data.session.user);});
 </script>
