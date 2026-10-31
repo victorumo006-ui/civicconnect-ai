@@ -125,7 +125,7 @@ footer a{color:#f3c65f}
 <div class="question-entry">
 <label for="typedquestion">Or type your own civic question</label>
 <textarea id="typedquestion" placeholder="Type your civic question here..."></textarea>
-<p class="source">Do not enter your PVC number, passwords, phone numbers, or other private details.</p>
+<p class="source">Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.</p>
 <button class="btn primary" type="button" onclick="submitTypedQuestion()">Submit question <span aria-hidden="true">→</span></button>
 <div id="typedanswer" class="answer hidden" aria-live="polite"></div>
 </div>
@@ -185,7 +185,7 @@ function answerQuestion(){
  if(lang==="ib"){box.textContent="Ibibio support is planned but not enabled in this prototype. To avoid giving you an inaccurate translation, please use the English guidance and check the official INEC source.";return;}
  box.textContent=item.title+"\n\n"+item.text+"\n\nOfficial source: "+item.url;
 }
-function submitTypedQuestion(){
+async function submitTypedQuestion(){
  const question=document.getElementById("typedquestion").value.trim(),box=document.getElementById("typedanswer");
  box.classList.remove("hidden");
  if(!question){box.textContent="Please type a civic question first.";return;}
@@ -196,16 +196,18 @@ function submitTypedQuestion(){
  else if(/pvc|voter.?s card|card collection|lost card|replace.*card/.test(q)) key="pvc";
  else if(/polling unit|where.*vote|voting location|vote centre|voting center/.test(q)) key="polling";
  else if(/result|winner|collation|result sheet/.test(q)) key="results";
+ const {error:saveError}=await civicClient.from("civic_questions").insert({question:question,topic:key||"other"});
+ const savedNote=saveError?"\\n\\nYour question could not be submitted for administrator review right now.":"\\n\\nYour question has been submitted for administrator review.";
  if(!key){
-  box.textContent="I could not match that question to one of the five topics in this demo. Please choose a topic from the menu above, or check INEC's official information channels: https://www.inecnigeria.org/\\n\\nThis prototype uses simple keyword matching, not live AI. Do not enter private voter details.";
+  box.textContent="I could not match that question to one of the five topics in this demo. Please choose a topic from the menu above, or check INEC's official information channels: https://www.inecnigeria.org/\\n\\nThis prototype uses simple keyword matching, not live AI. Do not enter private voter details."+savedNote;
   return;
  }
  const item=guidance[key],lang=document.getElementById("language").value;
  if(lang==="ib"){
-  box.textContent="Ibibio support is planned but not enabled in this prototype. Please use the English topic guidance and confirm details with INEC: "+item.url;
+  box.textContent="Ibibio support is planned but not enabled in this prototype. Please use the English topic guidance and confirm details with INEC: "+item.url+savedNote;
   return;
  }
- box.textContent="Suggested topic: "+item.title+"\\n\\n"+item.text+"\\n\\nOfficial source: "+item.url+"\\n\\nNote: This is sample guidance, not a live AI answer. Confirm current procedures with INEC.";
+ box.textContent="Suggested topic: "+item.title+"\\n\\n"+item.text+"\\n\\nOfficial source: "+item.url+"\\n\\nNote: This is sample guidance, not a live AI answer. Confirm current procedures with INEC."+savedNote;
 }
 function updateChecklist(){
  const steps=[...document.querySelectorAll(".verify-step")],done=steps.filter(step=>step.checked).length,total=steps.length;
