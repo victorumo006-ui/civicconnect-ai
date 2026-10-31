@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 </div>
 <div id="app" class="hidden">
 <div class="layout">
-<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#analytics">Analytics</a><a href="#usage">Visitor usage</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
+<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#engagement">Citizen engagement</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#analytics">Analytics</a><a href="#usage">Visitor usage</a><a href="#feedback">Citizen feedback</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
 <main>
 <section id="overview"><h1>Admin Dashboard</h1><p class="lead">Manage CivicConnect information and review submitted questions.</p>
 <div id="welcome" class="message"></div>
@@ -55,6 +55,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <div class="card"><small>New questions</small><div class="metric" id="newCount">—</div><span class="status">Awaiting review</span></div>
 <div class="card"><small>Admin access</small><div class="metric">Verified</div><span class="status">Signed-in administrator</span></div>
 </div></section>
+<section class="panel" id="engagement"><h2>Citizen engagement dashboard</h2><p>Understand whether submitted questions receive responses, which topics need attention, and how citizens rate published answers.</p><button class="secondary" id="refreshEngagement" type="button">Refresh engagement</button><div id="engagementMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Questions received</small><div class="metric" id="engQuestions">—</div></div><div class="card"><small>Questions answered</small><div class="metric" id="engAnswered">—</div></div><div class="card"><small>Awaiting response</small><div class="metric" id="engUnanswered">—</div></div><div class="card"><small>Response rate</small><div class="metric" id="engRate">—</div></div></div><div class="cards"><div class="card"><small>Published answers</small><div class="metric" id="engPublished">—</div></div><div class="card"><small>Helpful feedback</small><div class="metric" id="engHelpful">—</div></div><div class="card"><small>Not helpful feedback</small><div class="metric" id="engNotHelpful">—</div></div><div class="card"><small>Questions in last 7 days</small><div class="metric" id="engRecent">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Question status</h3><div id="engStatus"></div><h3 style="color:var(--navy);margin:18px 0 8px">Topics citizens ask about</h3><div id="engTopics"></div><h3 style="color:var(--navy);margin:18px 0 8px">Engagement over the last 7 days</h3><div id="engDaily"></div><h3 style="color:var(--navy);margin:18px 0 8px">Questions needing attention</h3><div id="engAttention"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Response rate means the share of all submitted questions with a saved administrator response, whether draft or published. Published answers are counted separately. Feedback is aggregated and does not identify individual voters. Metrics reflect records currently available in the database.</p></section>
 <section class="panel" id="analytics"><h2>Platform analytics</h2><p>Live summary of records stored in the CivicConnect database. These figures measure recorded activity, not unique visitors.</p><button class="secondary" id="refreshAnalytics" type="button">Refresh analytics</button><div id="analyticsMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Total questions</small><div class="metric" id="analyticsQuestions">—</div></div><div class="card"><small>Published guidance</small><div class="metric" id="analyticsGuidance">—</div></div><div class="card"><small>Published responses</small><div class="metric" id="analyticsResponses">—</div></div><div class="card"><small>Questions in last 7 days</small><div class="metric" id="analyticsRecent">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Most common question topics</h3><div id="topicAnalytics"></div><h3 style="color:var(--navy);margin:18px 0 8px">Question activity — last 7 days</h3><div id="weeklyAnalytics"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Privacy and measurement note: CivicConnect does not currently record unique visitors or page views. Topic and activity summaries are based only on submitted questions.</p></section>
 <section class="panel" id="usage"><h2>Visitor and platform usage</h2><p>Anonymous browser and section activity recorded by the public CivicConnect prototype.</p><button class="secondary" id="refreshUsage" type="button">Refresh usage</button><div id="usageMessage" role="status"></div><div class="cards" style="margin-top:15px"><div class="card"><small>Approx. unique browsers (30 days)</small><div class="metric" id="usageVisitors">—</div></div><div class="card"><small>Visits today</small><div class="metric" id="usageToday">—</div></div><div class="card"><small>Visits (30 days)</small><div class="metric" id="usageMonth">—</div></div><div class="card"><small>Tracked interactions (30 days)</small><div class="metric" id="usageInteractions">—</div></div></div><h3 style="color:var(--navy);margin:18px 0 8px">Most viewed sections and tools</h3><div id="usageSections"></div><p style="font-size:12px;color:var(--muted);margin-top:14px">Measurement note: visitor counts are approximate unique browser identifiers stored in the browser, not verified people. Visits count page loads. Section and tool activity is recorded when a section is viewed or a tool is used. Browser storage may be unavailable or cleared, and tracking can be blocked. No names, email addresses, phone numbers or IP addresses are collected.</p></section>
 <section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
@@ -73,6 +74,78 @@ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_K
 const $ = id => document.getElementById(id);
 function showMessage(id, message, isError=false){const el=$(id);el.textContent=message;el.className=isError?'message error':'message';}
 
+
+async function loadEngagementDashboard(){
+ showMessage('engagementMessage','Loading citizen engagement data…');
+ try{
+  const [{data:questions,error:qError},{data:responses,error:rError},{data:feedback,error:fError}]=await Promise.all([
+   client.from('civic_questions').select('id,question,topic,status,created_at').order('created_at',{ascending:false}),
+   client.from('civic_responses').select('id,question_id,question_text,response,status,updated_at'),
+   client.rpc('get_civic_feedback_totals')
+  ]);
+  if(qError)throw qError;if(rError)throw rError;if(fError)throw fError;
+  const qs=questions||[],rs=responses||[],fs=feedback||[];
+  const responseByQuestion=new Map(rs.map(x=>[x.question_id,x]));
+  const answered=qs.filter(q=>responseByQuestion.has(q.id)).length;
+  const published=rs.filter(r=>r.status==='published').length;
+  const helpful=fs.reduce((n,x)=>n+Number(x.helpful_count||0),0);
+  const notHelpful=fs.reduce((n,x)=>n+Number(x.not_helpful_count||0),0);
+  const cutoff=Date.now()-7*24*60*60*1000;
+  const recent=qs.filter(q=>new Date(q.created_at).getTime()>=cutoff).length;
+  $('engQuestions').textContent=qs.length;
+  $('engAnswered').textContent=answered;
+  $('engUnanswered').textContent=qs.length-answered;
+  $('engRate').textContent=(qs.length?Math.round(answered/qs.length*100):0)+'%';
+  $('engPublished').textContent=published;
+  $('engHelpful').textContent=helpful;
+  $('engNotHelpful').textContent=notHelpful;
+  $('engRecent').textContent=recent;
+  const statusCounts={new:0,reviewed:0,resolved:0};
+  qs.forEach(q=>{const k=['new','reviewed','resolved'].includes(q.status)?q.status:'new';statusCounts[k]++;});
+  const statusBox=$('engStatus');statusBox.innerHTML='';
+  const statusLabels={new:'Pending review',reviewed:'Reviewed',resolved:'Resolved'};
+  Object.entries(statusCounts).forEach(([k,v])=>{
+   const row=document.createElement('div');row.style.cssText='display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #edf1f5';
+   const a=document.createElement('span');a.textContent=statusLabels[k];const b=document.createElement('strong');b.textContent=v;row.append(a,b);statusBox.append(row);
+  });
+  const topics={};qs.forEach(q=>{const k=q.topic||'other';topics[k]=(topics[k]||0)+1;});
+  const topicLabels={voter_registration:'Voter registration',pvc:'PVC information',polling_unit:'Polling unit information',election_results:'Election results',reporting_issue:'Reporting an issue'};
+  const topicBox=$('engTopics');topicBox.innerHTML='';
+  const sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length)topicBox.textContent='No citizen questions have been submitted yet.';
+  const maxTopic=Math.max(1,...sorted.map(x=>x[1]));
+  sorted.forEach(([k,v])=>{
+   const row=document.createElement('div');row.style.cssText='margin:9px 0';
+   const label=document.createElement('div');label.style.cssText='display:flex;justify-content:space-between;font-size:13px';label.textContent=(topicLabels[k]||k.replaceAll('_',' '))+' · '+v;
+   const track=document.createElement('div');track.style.cssText='height:8px;background:#e8eef3;border-radius:20px;overflow:hidden;margin-top:5px';
+   const bar=document.createElement('div');bar.style.cssText='height:100%;background:#087f80;width:'+Math.round(v/maxTopic*100)+'%';track.append(bar);row.append(label,track);topicBox.append(row);
+  });
+  const daily=$('engDaily');daily.innerHTML='';
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);days.push({key:d.toLocaleDateString(),label:d.toLocaleDateString(undefined,{weekday:'short'}),questions:0,answers:0});}
+  const dayMap=new Map(days.map(d=>[d.key,d]));
+  qs.forEach(q=>{const d=dayMap.get(new Date(q.created_at).toLocaleDateString());if(d)d.questions++;});
+  rs.forEach(r=>{if(!r.updated_at)return;const d=dayMap.get(new Date(r.updated_at).toLocaleDateString());if(d)d.answers++;});
+  const maxDaily=Math.max(1,...days.flatMap(d=>[d.questions,d.answers]));
+  days.forEach(d=>{
+   const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:42px 1fr 1fr 24px;gap:7px;align-items:center;margin:9px 0;font-size:12px';
+   const day=document.createElement('span');day.textContent=d.label;
+   const qTrack=document.createElement('div');qTrack.style.cssText='height:9px;background:#e8eef3;border-radius:20px;overflow:hidden';const qb=document.createElement('div');qb.style.cssText='height:100%;background:#087f80;width:'+Math.round(d.questions/maxDaily*100)+'%';qTrack.append(qb);
+   const aTrack=document.createElement('div');aTrack.style.cssText='height:9px;background:#e8eef3;border-radius:20px;overflow:hidden';const ab=document.createElement('div');ab.style.cssText='height:100%;background:#d9a441;width:'+Math.round(d.answers/maxDaily*100)+'%';aTrack.append(ab);
+   const n=document.createElement('strong');n.textContent=d.questions+'/'+d.answers;row.append(day,qTrack,aTrack,n);daily.append(row);
+  });
+  const attention=$('engAttention');attention.innerHTML='';
+  const pending=qs.filter(q=>!responseByQuestion.has(q.id)).slice(0,8);
+  if(!pending.length)attention.textContent='No unanswered questions found. Keep reviewing new submissions.';
+  pending.forEach(q=>{
+   const card=document.createElement('div');card.className='item';
+   const title=document.createElement('h3');title.textContent=q.question||'Question without text';
+   const meta=document.createElement('small');meta.textContent=(topicLabels[q.topic]||q.topic||'Uncategorised')+' · '+new Date(q.created_at).toLocaleString();
+   const state=document.createElement('p');state.textContent='Status: '+(q.status||'new');
+   card.append(title,meta,state);attention.append(card);
+  });
+  showMessage('engagementMessage','Citizen engagement dashboard updated successfully.');
+ }catch(error){showMessage('engagementMessage','Could not load engagement data: '+(error?.message||String(error)),true);}
+}
 
 async function loadAnalytics(){
  showMessage('analyticsMessage','Loading platform analytics…');
@@ -203,7 +276,7 @@ async function loadDashboard(user){
   const {data:admin,error:adminError}=await client.from('civic_admin_users').select('user_id,role').eq('user_id',user.id).maybeSingle();
   if(adminError||!admin){await client.auth.signOut();showMessage('loginMessage','This account is not authorised as a CivicConnect administrator.',true);return;}
   $('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('adminEmail').textContent='Signed in as '+(user.email||'administrator');$('welcome').textContent='Administrator access verified. Live data is loaded from your CivicConnect database.';
-  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard(),loadAnalytics(),loadUsageAnalytics()]);
+  await Promise.all([loadGuidance(),loadQuestions(),loadFeedbackDashboard(),loadAnalytics(),loadUsageAnalytics(),loadEngagementDashboard()]);
 }
 async function loadGuidance(){
  const {data,error}=await client.from('civic_guidance').select('*').order('created_at',{ascending:false});
@@ -272,6 +345,7 @@ $('refreshQuestions').addEventListener('click',loadQuestions);
 $('refreshFeedback').addEventListener('click',loadFeedbackDashboard);
 $('refreshAnalytics').addEventListener('click',loadAnalytics);
 $('refreshUsage').addEventListener('click',loadUsageAnalytics);
+$('refreshEngagement').addEventListener('click',loadEngagementDashboard);
 $('logout').addEventListener('click',async()=>{await client.auth.signOut();$('app').classList.add('hidden');$('loginWrap').classList.remove('hidden');$('password').value='';showMessage('loginMessage','You have signed out.');});
 client.auth.getSession().then(({data})=>{if(data.session)loadDashboard(data.session.user);});
 </script>
