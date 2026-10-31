@@ -314,20 +314,20 @@ async function submitTypedQuestion(){
  else if(/polling unit|where.*vote|voting location|vote centre|voting center/.test(q)) key="polling";
  else if(/result|winner|collation|result sheet/.test(q)) key="results";
  const topic=key||"other";
- const {error:saveError}=await civicClient.from("civic_questions").insert({question:question,topic:topic});
- if(saveError){
-  box.textContent="Your question could not be submitted. Please try again.";
-  if(window.turnstile)window.turnstile.reset();
-  return;
- }
- box.textContent="Your question has been saved for administrator review. Sending an email notification…";
- const {error:notifyError}=await civicClient.functions.invoke("notify-civic-admin",{body:{question:question,topic:topic,turnstileToken:turnstileToken,visitorKey:civicVisitorKey}});
- if(notifyError){
+ box.textContent="Submitting your question securely…";
+ const {data,error}=await civicClient.functions.invoke("notify-civic-admin",{body:{question:question,topic:topic,turnstileToken:turnstileToken,visitorKey:civicVisitorKey}});
+ if(error){
+  const status=error.context&&error.context.status;
+  box.textContent=status===429?"You have reached the submission limit. Please wait 10 minutes before trying again.":"Your question could not be submitted. Please try again later.";
+ }else if(data&&data.saved&&data.notification==="failed"){
   box.textContent="Your question was saved successfully, but the administrator email notification could not be sent. Please do not submit it again. The administrator can still see it in the dashboard.";
- }else{
+  document.getElementById("typedquestion").value="";
+ }else if(data&&data.success&&data.saved){
   box.textContent="Your question has been submitted successfully and the administrator has been notified by email.";
+  document.getElementById("typedquestion").value="";
+ }else{
+  box.textContent="The submission result could not be confirmed. Please check with the administrator before submitting again.";
  }
- document.getElementById("typedquestion").value="";
  if(window.turnstile)window.turnstile.reset();
 }
 function updateChecklist(){
