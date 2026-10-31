@@ -92,6 +92,7 @@ footer a{color:#f3c65f}
 @media(max-width:420px){.navlinks{width:100%;justify-content:space-between}.status{display:none}.features{grid-template-columns:1fr}.panel{padding:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 </style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -134,6 +135,7 @@ footer a{color:#f3c65f}
 <div class="question-entry">
 <label for="typedquestion">Or type your own civic question</label>
 <textarea id="typedquestion" placeholder="Type your civic question here..."></textarea>
+<div class="cf-turnstile" data-sitekey="0x4AAAAAAFuFo1NILMC5bYih"></div>
 <p class="source">Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.</p>
 <button class="btn primary" type="button" onclick="submitTypedQuestion()">Submit question <span aria-hidden="true">→</span></button>
 <div id="typedanswer" class="answer hidden" aria-live="polite"></div>
@@ -301,6 +303,9 @@ async function submitTypedQuestion(){
  const question=document.getElementById("typedquestion").value.trim(),box=document.getElementById("typedanswer");
  box.classList.remove("hidden");
  if(!question){box.textContent="Please type a civic question first.";return;}
+ if(question.length>3000){box.textContent="Please keep your question below 3,000 characters.";return;}
+ const turnstileToken=window.turnstile&&window.turnstile.getResponse?window.turnstile.getResponse():"";
+ if(!turnstileToken){box.textContent="Please complete the security check before submitting your question.";return;}
  const q=question.toLowerCase();
  let key="";
  if(/report|complain|incident|violence|intimidat|bribery|buying vote|witness(ed)?|threat(en|ened)?|harass/.test(q)) key="report";
@@ -308,18 +313,22 @@ async function submitTypedQuestion(){
  else if(/pvc|voter.?s card|card collection|lost card|replace.*card/.test(q)) key="pvc";
  else if(/polling unit|where.*vote|voting location|vote centre|voting center/.test(q)) key="polling";
  else if(/result|winner|collation|result sheet/.test(q)) key="results";
- const {error:saveError}=await civicClient.from("civic_questions").insert({question:question,topic:key||"other"});
- const savedNote=saveError?"\\n\\nYour question could not be submitted for administrator review right now.":"\\n\\nYour question has been submitted for administrator review.";
- if(!key){
-  box.textContent="I could not match that question to one of the five topics in this demo. Please choose a topic from the menu above, or check INEC's official information channels: https://www.inecnigeria.org/\\n\\nThis prototype uses simple keyword matching, not live AI. Do not enter private voter details."+savedNote;
+ const topic=key||"other";
+ const {error:saveError}=await civicClient.from("civic_questions").insert({question:question,topic:topic});
+ if(saveError){
+  box.textContent="Your question could not be submitted. Please try again.";
+  if(window.turnstile)window.turnstile.reset();
   return;
  }
- const item=guidance[key],lang=document.getElementById("language").value;
- if(lang==="ib"){
-  box.textContent="Ibibio support is planned but not enabled in this prototype. Please use the English topic guidance and confirm details with INEC: "+item.url+savedNote;
-  return;
+ box.textContent="Your question has been saved for administrator review. Sending an email notification…";
+ const {error:notifyError}=await civicClient.functions.invoke("notify-civic-admin",{body:{question:question,topic:topic,turnstileToken:turnstileToken}});
+ if(notifyError){
+  box.textContent="Your question was saved successfully, but the administrator email notification could not be sent. Please do not submit it again. The administrator can still see it in the dashboard.";
+ }else{
+  box.textContent="Your question has been submitted successfully and the administrator has been notified by email.";
  }
- box.textContent="Suggested topic: "+item.title+"\\n\\n"+item.text+"\\n\\nOfficial source: "+item.url+"\\n\\nNote: This is sample guidance, not a live AI answer. Confirm current procedures with INEC."+savedNote;
+ document.getElementById("typedquestion").value="";
+ if(window.turnstile)window.turnstile.reset();
 }
 function updateChecklist(){
  const steps=[...document.querySelectorAll(".verify-step")],done=steps.filter(step=>step.checked).length,total=steps.length;
