@@ -321,7 +321,7 @@ async function submitTypedQuestion(){
   return;
  }
  box.textContent="Your question has been saved for administrator review. Sending an email notification…";
- const {error:notifyError}=await civicClient.functions.invoke("notify-civic-admin",{body:{question:question,topic:topic,turnstileToken:turnstileToken}});
+ const {error:notifyError}=await civicClient.functions.invoke("notify-civic-admin",{body:{question:question,topic:topic,turnstileToken:turnstileToken,visitorKey:civicVisitorKey}});
  if(notifyError){
   box.textContent="Your question was saved successfully, but the administrator email notification could not be sent. Please do not submit it again. The administrator can still see it in the dashboard.";
  }else{
