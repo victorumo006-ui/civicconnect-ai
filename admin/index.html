@@ -20,45 +20,81 @@ h1{font-size:27px;margin:0 0 5px;color:var(--navy)}.lead{margin:0 0 24px;color:v
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:26px}
 .card,.panel{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:18px}
 .card small{color:var(--muted);display:block}.metric{font-size:27px;font-weight:800;color:var(--navy);margin-top:8px}
-.panel{margin:16px 0}.panel h2{font-size:18px;margin:0 0 6px;color:var(--navy)}.panel p{color:var(--muted);margin:0}
+.panel{margin:16px 0}.panel h2{font-size:18px;margin:0 0 6px;color:var(--navy)}.panel p{color:var(--muted);margin:0 0 12px}
 .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
 .action{border:1px solid var(--line);border-radius:10px;padding:14px;text-decoration:none;color:var(--ink);display:block}
 .action strong{display:block;color:var(--teal);margin-bottom:3px}.action span{font-size:13px;color:var(--muted)}
 .status{display:inline-block;background:#edf2f7;color:#526174;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-top:10px}
+button,.btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}button.secondary{background:#e8eef3;color:var(--navy)}
+input,textarea,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;margin:5px 0 12px;font:inherit;background:#fff}
+label{font-weight:700;font-size:13px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.item{border:1px solid var(--line);padding:12px;border-radius:9px;margin:9px 0;background:#fff}.item h3{font-size:15px;margin:0 0 4px}.item p{margin:4px 0;color:var(--muted);white-space:pre-wrap}
+.hidden{display:none!important}.message{padding:11px;border-radius:8px;margin:10px 0;background:#eaf5f3;color:#145b58}.error{background:#fff0ef;color:#9b2922}
+#loginWrap{max-width:460px;margin:55px auto;padding:24px;background:#fff;border:1px solid var(--line);border-radius:14px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 @media(max-width:800px){.layout{grid-template-columns:1fr}nav{border-right:0;border-bottom:1px solid var(--line);padding:10px;display:flex;overflow:auto;gap:4px}nav p{display:none}nav a{white-space:nowrap;margin:0}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:20px 15px}}
-@media(max-width:430px){.cards,.actions{grid-template-columns:1fr}h1{font-size:23px}}
+@media(max-width:430px){.cards,.actions,.formgrid{grid-template-columns:1fr}h1{font-size:23px}}
 </style>
 </head>
 <body>
-<header><div class="brand">CivicConnect <span>Admin</span></div><div class="topnote">Dashboard layout · Early prototype</div></header>
+<header><div class="brand">CivicConnect <span>Admin</span></div><div class="topnote">Secure administration · Supabase connected</div></header>
+<div id="loginWrap">
+<h1>Administrator sign in</h1><p class="lead">Sign in with the administrator account created for CivicConnect AI.</p>
+<form id="loginForm"><label>Email address</label><input id="email" type="email" autocomplete="username" required><label>Password</label><input id="password" type="password" autocomplete="current-password" required><button type="submit">Sign in</button></form>
+<div id="loginMessage" role="status" aria-live="polite"></div>
+</div>
+<div id="app" class="hidden">
 <div class="layout">
-<nav aria-label="Dashboard navigation">
-<p>Workspace</p>
-<a class="active" href="#overview">Overview</a>
-<a href="#guidance">Manage guidance</a>
-<a href="#questions">Questions</a>
-<a href="#verification">Claim verification</a>
-<a href="#settings">Settings</a>
-</nav>
+<nav aria-label="Dashboard navigation"><p>Workspace</p><a class="active" href="#overview">Overview</a><a href="#guidance">Manage guidance</a><a href="#questions">Questions</a><a href="#verification">Claim verification</a><a href="#settings">Settings</a></nav>
 <main>
-<section id="overview">
-<h1>Admin Dashboard</h1>
-<p class="lead">A central place to organise CivicConnect information and review platform activity.</p>
-<div class="notice"><strong>Setup stage:</strong> This is the visual dashboard layout only. It is not connected to Supabase, does not display live user data, and does not yet provide secure administrator sign-in.</div>
+<section id="overview"><h1>Admin Dashboard</h1><p class="lead">Manage CivicConnect information and review submitted questions.</p>
+<div id="welcome" class="message"></div>
 <div class="cards">
-<div class="card"><small>Questions received</small><div class="metric">—</div><span class="status">Not connected</span></div>
-<div class="card"><small>Guidance topics</small><div class="metric">5</div><span class="status">Sample content</span></div>
-<div class="card"><small>Claims reviewed</small><div class="metric">—</div><span class="status">Not connected</span></div>
-<div class="card"><small>Admin users</small><div class="metric">—</div><span class="status">Not connected</span></div>
-</div>
-</section>
-<section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Review and maintain the sample guidance shown for voter registration, PVC, polling units, election results and reporting issues.</p><div class="actions"><a class="action" href="#guidance"><strong>Voter registration</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>PVC information</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>Polling unit information</strong><span>Sample guidance · Editing not enabled</span></a><a class="action" href="#guidance"><strong>Election results &amp; reporting</strong><span>Sample guidance · Editing not enabled</span></a></div></section>
-<section class="panel" id="questions"><h2>User questions</h2><p>Future area for reviewing questions submitted by visitors. The current public prototype does not save typed questions to a database.</p><span class="status">Database connection pending</span></section>
-<section class="panel" id="verification"><h2>Claim verification resources</h2><p>Future area for maintaining official links, verification steps and trusted public information resources. Checklist activity is currently local to the visitor's browser.</p><span class="status">Management not enabled</span></section>
-<section class="panel" id="settings"><h2>Administrator settings</h2><p>Secure sign-in, administrator roles and activity records will be added before this dashboard is used for real administration.</p><span class="status">Authentication not connected</span></section>
+<div class="card"><small>Questions received</small><div class="metric" id="questionCount">—</div><span class="status">Live database count</span></div>
+<div class="card"><small>Published guidance</small><div class="metric" id="guidanceCount">—</div><span class="status">Live database count</span></div>
+<div class="card"><small>New questions</small><div class="metric" id="newCount">—</div><span class="status">Awaiting review</span></div>
+<div class="card"><small>Admin access</small><div class="metric">Verified</div><span class="status">Signed-in administrator</span></div>
+</div></section>
+<section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
+<form id="guidanceForm"><div class="formgrid"><div><label>Topic</label><select id="gTopic" required><option value="voter_registration">Voter registration</option><option value="pvc">PVC information</option><option value="polling_unit">Polling unit information</option><option value="election_results">Election results</option><option value="reporting_issue">Reporting an issue</option></select></div><div><label>Title</label><input id="gTitle" required maxlength="160"></div></div><label>Guidance content</label><textarea id="gContent" rows="4" required></textarea><label>Official source URL (optional)</label><input id="gSource" type="url" placeholder="https://www.inecnigeria.org/"><label><input id="gPublished" type="checkbox" style="width:auto;margin-right:7px">Publish this guidance</label><br><button type="submit">Save guidance</button></form><div id="guidanceMessage" role="status"></div><div id="guidanceList"></div></section>
+<section class="panel" id="questions"><h2>User questions</h2><p>Questions submitted through a connected form can be reviewed here.</p><button class="secondary" id="refreshQuestions" type="button">Refresh questions</button><div id="questionsList"></div></section>
+<section class="panel" id="verification"><h2>Claim verification resources</h2><p>The public claim checklist remains a manual verification aid. Completing it does not prove a claim is true. Official source: <a href="https://www.inecnigeria.org/" target="_blank" rel="noopener">INEC website</a>.</p><span class="status">Manual checklist · Not automated fact-checking</span></section>
+<section class="panel" id="settings"><h2>Administrator settings</h2><p id="adminEmail"></p><button class="secondary" id="logout" type="button">Sign out</button></section>
 <footer>CivicConnect AI · Admin prototype · Not an official INEC product</footer>
-</main>
-</div>
-</body>
-</html>
+</main></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://gzukfhoqwnsflfzsqvcy.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zaQn8YrEfJJ2NGuf-ni2wA_u7jp0Hez";
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+function showMessage(id, message, isError=false){const el=$(id);el.textContent=message;el.className=isError?'message error':'message';}
+async function loadDashboard(user){
+  const {data:admin,error:adminError}=await client.from('civic_admin_users').select('user_id,role').eq('user_id',user.id).maybeSingle();
+  if(adminError||!admin){await client.auth.signOut();showMessage('loginMessage','This account is not authorised as a CivicConnect administrator.',true);return;}
+  $('loginWrap').classList.add('hidden');$('app').classList.remove('hidden');$('adminEmail').textContent='Signed in as '+(user.email||'administrator');$('welcome').textContent='Administrator access verified. Live data is loaded from your CivicConnect database.';
+  await Promise.all([loadGuidance(),loadQuestions()]);
+}
+async function loadGuidance(){
+ const {data,error}=await client.from('civic_guidance').select('*').order('created_at',{ascending:false});
+ if(error){$('guidanceList').textContent='Could not load guidance: '+error.message;return;}
+ const published=(data||[]).filter(x=>x.is_published).length;$('guidanceCount').textContent=published;
+ $('guidanceList').innerHTML=(data||[]).map(x=>'<div class="item"><h3></h3><p></p><small></small></div>').join('');
+ [...$('guidanceList').children].forEach((el,i)=>{const x=data[i];el.querySelector('h3').textContent=x.title;el.querySelector('p').textContent=x.content;el.querySelector('small').textContent=x.topic+' · '+(x.is_published?'Published':'Draft');});
+ if(!data||!data.length)$('guidanceList').textContent='No guidance records yet. Add the first entry above.';
+}
+async function loadQuestions(){
+ const {data,error}=await client.from('civic_questions').select('*').order('created_at',{ascending:false});
+ if(error){$('questionsList').textContent='Could not load questions: '+error.message;return;}
+ const rows=data||[];$('questionCount').textContent=rows.length;$('newCount').textContent=rows.filter(x=>x.status==='new').length;
+ $('questionsList').innerHTML='';
+ if(!rows.length){$('questionsList').textContent='No user questions have been submitted yet.';return;}
+ rows.forEach(x=>{const el=document.createElement('div');el.className='item';const q=document.createElement('p');q.textContent=x.question;const meta=document.createElement('small');meta.textContent=(x.topic||'Uncategorised')+' · '+x.status+' · '+new Date(x.created_at).toLocaleString();el.append(q,meta);$('questionsList').append(el);});
+}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();showMessage('loginMessage','Signing in…');const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){showMessage('loginMessage',error.message,true);return;}await loadDashboard(data.user);});
+$('guidanceForm').addEventListener('submit',async e=>{e.preventDefault();const record={topic:$('gTopic').value,title:$('gTitle').value.trim(),content:$('gContent').value.trim(),source_url:$('gSource').value.trim()||null,is_published:$('gPublished').checked};const {error}=await client.from('civic_guidance').insert(record);if(error){showMessage('guidanceMessage','Could not save: '+error.message,true);return;}e.target.reset();showMessage('guidanceMessage','Guidance saved successfully.');await loadGuidance();});
+$('refreshQuestions').addEventListener('click',loadQuestions);
+$('logout').addEventListener('click',async()=>{await client.auth.signOut();$('app').classList.add('hidden');$('loginWrap').classList.remove('hidden');$('password').value='';showMessage('loginMessage','You have signed out.');});
+client.auth.getSession().then(({data})=>{if(data.session)loadDashboard(data.session.user);});
+</script>
+</body></html>
