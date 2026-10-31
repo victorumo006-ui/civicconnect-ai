@@ -179,6 +179,42 @@ footer a{color:#f3c65f}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const civicClient=window.supabase.createClient("https://gzukfhoqwnsflfzsqvcy.supabase.co","sb_publishable_zaQn8YrEfJJ2NGuf-ni2wA_u7jp0Hez");
+
+/* Anonymous platform usage measurement. No names, email addresses, phone numbers or IP addresses are collected. */
+function civicStorageKey(storage,key){
+ try{let value=storage.getItem(key);if(!value){value=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("cc-"+Date.now()+"-"+Math.random().toString(36).slice(2));storage.setItem(key,value);}return value;}
+ catch(error){return "cc-"+Date.now()+"-"+Math.random().toString(36).slice(2);}
+}
+const civicVisitorKey=civicStorageKey(localStorage,"civicconnect_visitor_key");
+const civicSessionKey=civicStorageKey(sessionStorage,"civicconnect_session_key");
+async function recordCivicUsage(sectionName){
+ try{
+  const {error}=await civicClient.from("civic_usage_events").insert({
+   visitor_key:civicVisitorKey,
+   session_key:civicSessionKey,
+   page_path:location.pathname,
+   section_name:sectionName||"page_view"
+  });
+  if(error)console.warn("CivicConnect usage record was not saved:",error.message);
+ }catch(error){console.warn("CivicConnect usage tracking is unavailable.");}
+}
+recordCivicUsage("page_view");
+function setupCivicSectionTracking(){
+ const sections=["assistant","verify","sources","published-guidance","administrator-responses"];
+ if(!("IntersectionObserver" in window))return;
+ const seen=new Set();
+ const observer=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+   if(entry.isIntersecting&&!seen.has(entry.target.id)){
+    seen.add(entry.target.id);
+    recordCivicUsage("section:"+entry.target.id);
+   }
+  });
+ },{threshold:0.35});
+ sections.forEach(id=>{const section=document.getElementById(id);if(section)observer.observe(section);});
+}
+setupCivicSectionTracking();
+
 async function loadPublishedGuidance(){const box=document.getElementById("publishedGuidance");try{const {data,error}=await civicClient.from("civic_guidance").select("topic,title,content,source_url,created_at").eq("is_published",true).order("created_at",{ascending:false});if(error)throw error;if(!data||!data.length){box.textContent="No published guidance is available yet.";return;}box.innerHTML="";data.forEach(item=>{const article=document.createElement("article");article.className="item";const heading=document.createElement("h3");heading.textContent=item.title;const body=document.createElement("p");body.textContent=item.content;article.append(heading,body);if(item.source_url){const link=document.createElement("a");link.href=item.source_url;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open official source";article.append(link);}box.append(article);});}catch(error){box.textContent="Published guidance could not be loaded right now. Please check the official INEC website for current information.";}}
 loadPublishedGuidance();
 async function loadPublishedResponses(){
@@ -254,12 +290,14 @@ results:{title:"Election results",text:"Check official INEC result announcements
 report:{title:"Reporting an issue",text:"Record what happened, when and where it occurred, and preserve original evidence without putting yourself at risk. Use the relevant official reporting channel or contact appropriate authorities. Avoid publishing private information about other people.",url:"https://www.inecnigeria.org/"}
 };
 function answerQuestion(){
+ recordCivicUsage("assistant:topic_guidance");
  const key=document.getElementById("question").value,lang=document.getElementById("language").value,item=guidance[key],box=document.getElementById("answer");
  box.classList.remove("hidden");
  if(lang==="ib"){box.textContent="Ibibio support is planned but not enabled in this prototype. To avoid giving you an inaccurate translation, please use the English guidance and check the official INEC source.";return;}
  box.textContent=item.title+"\n\n"+item.text+"\n\nOfficial source: "+item.url;
 }
 async function submitTypedQuestion(){
+ recordCivicUsage("assistant:typed_question");
  const question=document.getElementById("typedquestion").value.trim(),box=document.getElementById("typedanswer");
  box.classList.remove("hidden");
  if(!question){box.textContent="Please type a civic question first.";return;}
@@ -297,6 +335,7 @@ function resetChecklist(){
 document.querySelectorAll(".verify-step").forEach(step=>step.addEventListener("change",updateChecklist));
 updateChecklist();
 function checkClaim(){
+ recordCivicUsage("verification:checklist_request");
  const claim=document.getElementById("claim").value.trim(),box=document.getElementById("claimanswer");
  box.classList.remove("hidden");
  if(!claim){box.textContent="Enter a claim or message first. Do not include private voter details.";return;}
