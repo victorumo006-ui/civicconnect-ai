@@ -29,7 +29,7 @@ button,.btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding
 input,textarea,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;margin:5px 0 12px;font:inherit;background:#fff}
 label{font-weight:700;font-size:13px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .item{border:1px solid var(--line);padding:12px;border-radius:9px;margin:9px 0;background:#fff}.item h3{font-size:15px;margin:0 0 4px}.item p{margin:4px 0;color:var(--muted);white-space:pre-wrap}
-.hidden{display:none!important}.message{padding:11px;border-radius:8px;margin:10px 0;background:#eaf5f3;color:#145b58}.error{background:#fff0ef;color:#9b2922}
+.hidden{display:none!important}.message{padding:11px;border-radius:8px;margin:10px 0;background:#eaf5f3;color:#145b58}.error{background:#fff0ef;color:#9b2922}.feedback-alert{border-left:4px solid #d9a441;background:#fff8e8;padding:12px;border-radius:8px;margin:10px 0}.feedback-alert strong{display:block;color:#765315}.feedback-clear{border-left:4px solid #087f80;background:#eef8f6;padding:12px;border-radius:8px;margin:10px 0}
 #loginWrap{max-width:460px;margin:55px auto;padding:24px;background:#fff;border:1px solid var(--line);border-radius:14px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 @media(max-width:800px){.layout{grid-template-columns:1fr}nav{border-right:0;border-bottom:1px solid var(--line);padding:10px;display:flex;overflow:auto;gap:4px}nav p{display:none}nav a{white-space:nowrap;margin:0}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:20px 15px}}
@@ -58,7 +58,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <section class="panel" id="guidance"><h2>Manage civic guidance</h2><p>Add guidance that can be shown to visitors. Only published entries are publicly readable.</p>
 <form id="guidanceForm"><div class="formgrid"><div><label>Topic</label><select id="gTopic" required><option value="voter_registration">Voter registration</option><option value="pvc">PVC information</option><option value="polling_unit">Polling unit information</option><option value="election_results">Election results</option><option value="reporting_issue">Reporting an issue</option></select></div><div><label>Title</label><input id="gTitle" required maxlength="160"></div></div><label>Guidance content</label><textarea id="gContent" rows="4" required></textarea><label>Official source URL (optional)</label><input id="gSource" type="url" placeholder="https://www.inecnigeria.org/"><label><input id="gPublished" type="checkbox" style="width:auto;margin-right:7px">Publish this guidance</label><br><button type="submit">Save guidance</button></form><div id="guidanceMessage" role="status"></div><div id="guidanceList"></div></section>
 <section class="panel" id="questions"><h2>User questions</h2><p>Questions submitted through a connected form can be reviewed here.</p><button class="secondary" id="refreshQuestions" type="button">Refresh questions</button><div id="questionsList"></div></section>
-<section class="panel" id="feedback"><h2>Citizen feedback</h2><p>Review feedback totals for published administrator responses. Individual browser identifiers and voting records are not displayed.</p><button class="secondary" id="refreshFeedback" type="button">Refresh feedback</button><div class="cards" style="margin-top:15px"><div class="card"><small>Total votes</small><div class="metric" id="feedbackTotal">—</div></div><div class="card"><small>Helpful</small><div class="metric" id="feedbackHelpful">—</div></div><div class="card"><small>Not helpful</small><div class="metric" id="feedbackNotHelpful">—</div></div><div class="card"><small>Helpfulness rate</small><div class="metric" id="feedbackRate">—</div></div></div><div id="feedbackMessage" role="status"></div><div id="feedbackList"></div></section>
+<section class="panel" id="feedback"><h2>Citizen feedback</h2><p>Review feedback totals for published administrator responses. Individual browser identifiers and voting records are not displayed.</p><button class="secondary" id="refreshFeedback" type="button">Refresh feedback</button><div class="cards" style="margin-top:15px"><div class="card"><small>Total votes</small><div class="metric" id="feedbackTotal">—</div></div><div class="card"><small>Helpful</small><div class="metric" id="feedbackHelpful">—</div></div><div class="card"><small>Not helpful</small><div class="metric" id="feedbackNotHelpful">—</div></div><div class="card"><small>Helpfulness rate</small><div class="metric" id="feedbackRate">—</div></div></div><div id="feedbackMessage" role="status"></div><h3 style="margin:18px 0 8px;color:var(--navy)">Improvement alerts</h3><div id="feedbackAlerts"></div><h3 style="margin:18px 0 8px;color:var(--navy)">Feedback by published response</h3><div id="feedbackList"></div></section>
 <section class="panel" id="verification"><h2>Claim verification resources</h2><p>The public claim checklist remains a manual verification aid. Completing it does not prove a claim is true. Official source: <a href="https://www.inecnigeria.org/" target="_blank" rel="noopener">INEC website</a>.</p><span class="status">Manual checklist · Not automated fact-checking</span></section>
 <section class="panel" id="settings"><h2>Administrator settings</h2><p id="adminEmail"></p><button class="secondary" id="logout" type="button">Sign out</button></section>
 <footer>CivicConnect AI · Admin prototype · Not an official INEC product</footer>
@@ -92,17 +92,28 @@ async function loadFeedbackDashboard(){
   $('feedbackNotHelpful').textContent=notHelpful;
   $('feedbackRate').textContent=(total?Math.round(helpful/total*100):0)+'%';
   list.innerHTML='';
+  const alerts=$('feedbackAlerts');alerts.innerHTML='';
+  let flagged=0;
   published.forEach(response=>{
    const row=rows.find(t=>t.response_id===response.id);
    const yes=row?Number(row.helpful_count||0):0;
    const no=row?Number(row.not_helpful_count||0):0;
+   const count=yes+no;
    const card=document.createElement('div');card.className='item';
    const title=document.createElement('h3');title.textContent=response.question_text||'Citizen question';
-   const summary=document.createElement('p');summary.textContent='Helpful: '+yes+' · Not helpful: '+no+' · Total: '+(yes+no);
-   const rate=document.createElement('small');rate.textContent='Helpfulness rate: '+((yes+no)?Math.round(yes/(yes+no)*100):0)+'%';
+   const summary=document.createElement('p');summary.textContent='Helpful: '+yes+' · Not helpful: '+no+' · Total: '+count;
+   const rate=document.createElement('small');rate.textContent='Helpfulness rate: '+(count?Math.round(yes/count*100):0)+'%';
    card.append(title,summary,rate);list.append(card);
+   if(count>0&&(no>yes||no>=3)){
+    flagged++;
+    const alert=document.createElement('div');alert.className='feedback-alert';
+    const heading=document.createElement('strong');heading.textContent='Review recommended';
+    const detail=document.createElement('span');detail.textContent=(response.question_text||'This published response')+' — '+no+' not helpful, '+yes+' helpful. Please review the answer for clarity, accuracy and useful official sources.';
+    alert.append(heading,detail);alerts.append(alert);
+   }
   });
   if(!published.length){list.textContent='No published responses are available for feedback reporting yet.';}
+  if(!flagged){const clear=document.createElement('div');clear.className='feedback-clear';clear.textContent=published.length?'No responses currently meet the improvement-alert thresholds.':'Alerts will appear when published responses receive feedback.';alerts.append(clear);}
   showMessage('feedbackMessage','Feedback dashboard updated successfully.');
  }catch(error){
   showMessage('feedbackMessage','Could not load feedback dashboard: '+(error?.message||String(error)),true);
