@@ -70,6 +70,13 @@ textarea{min-height:112px;resize:vertical}
 .check-item input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--teal);flex:0 0 auto}
 .checklist .btn{margin-top:13px}
 .source a{font-weight:750}
+.feedback{margin-top:15px;padding-top:12px;border-top:1px solid var(--line)}
+.feedback-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
+.feedback-actions button{border:1px solid #cbd8e2;border-radius:9px;background:#fff;color:var(--navy);padding:8px 12px;font-weight:700;cursor:pointer}
+.feedback-actions button:hover{border-color:var(--teal);background:#f0f8f6}
+.feedback-actions button:disabled{opacity:.6;cursor:wait}
+.feedback-counts{font-size:.82rem;color:var(--muted);margin-top:7px}
+.feedback-message{font-size:.84rem;color:var(--teal);margin:7px 0 0}
 .official-link{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid var(--line);border-radius:13px;text-decoration:none;color:var(--navy);margin:12px 0}
 .official-link:hover{border-color:#8db8c7;background:#f8fbfd}
 .official-link strong{display:block}
@@ -177,7 +184,7 @@ loadPublishedGuidance();
 async function loadPublishedResponses(){
  const box=document.getElementById("publishedResponses");
  try{
-  const {data,error}=await civicClient.from("civic_responses").select("question_text,response,created_at").eq("status","published").not("question_text","is",null).order("created_at",{ascending:false});
+  const {data,error}=await civicClient.from("civic_responses").select("id,question_text,response,created_at").eq("status","published").not("question_text","is",null).order("created_at",{ascending:false});
   if(error)throw error;
   if(!data||!data.length){box.textContent="No published administrator responses are available yet.";return;}
   box.innerHTML="";
@@ -188,11 +195,57 @@ async function loadPublishedResponses(){
    const answerHeading=document.createElement("h4");answerHeading.textContent="Administrator response";
    const answer=document.createElement("p");answer.textContent=item.response;
    const date=document.createElement("small");date.className="source";date.textContent="Published "+new Date(item.created_at).toLocaleString();
-   article.append(questionHeading,question,answerHeading,answer,date);box.append(article);
+   const feedback=document.createElement("div");feedback.className="feedback";
+   const prompt=document.createElement("strong");prompt.textContent="Was this answer helpful?";
+   const actions=document.createElement("div");actions.className="feedback-actions";
+   const yes=document.createElement("button");yes.type="button";yes.textContent="👍 Helpful";
+   const no=document.createElement("button");no.type="button";no.textContent="👎 Not helpful";
+   const counts=document.createElement("div");counts.className="feedback-counts";counts.textContent="Loading feedback totals…";
+   const message=document.createElement("p");message.className="feedback-message";message.setAttribute("aria-live","polite");
+   yes.addEventListener("click",()=>sendCivicFeedback(item.id,true,yes,no,counts,message));
+   no.addEventListener("click",()=>sendCivicFeedback(item.id,false,yes,no,counts,message));
+   actions.append(yes,no);feedback.append(prompt,actions,counts,message);
+   article.append(questionHeading,question,answerHeading,answer,date,feedback);box.append(article);
+   loadCivicFeedbackTotals(item.id,counts);
   });
  }catch(error){box.textContent="Published responses could not be loaded right now. Please check the official INEC website for current information.";}
 }
 loadPublishedResponses();
+
+function getCivicVoterKey(){
+ const storageKey="civicconnect_feedback_key";
+ try{
+  let key=localStorage.getItem(storageKey);
+  if(!key){key=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("cc-"+Date.now()+"-"+Math.random().toString(36).slice(2));localStorage.setItem(storageKey,key);}
+  return key;
+ }catch(error){
+  return "cc-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+ }
+}
+async function loadCivicFeedbackTotals(responseId,box){
+ try{
+  const {data,error}=await civicClient.rpc("get_civic_feedback_totals");
+  if(error)throw error;
+  const total=(data||[]).find(row=>row.response_id===responseId);
+  const helpful=total?Number(total.helpful_count):0;
+  const notHelpful=total?Number(total.not_helpful_count):0;
+  box.textContent=helpful+" found helpful · "+notHelpful+" found not helpful";
+ }catch(error){box.textContent="Feedback totals are temporarily unavailable.";}
+}
+async function sendCivicFeedback(responseId,helpful,yes,no,counts,message){
+ yes.disabled=true;no.disabled=true;message.textContent="Submitting your feedback…";
+ try{
+  const {error}=await civicClient.rpc("submit_civic_feedback",{
+   p_response_id:responseId,p_voter_key:getCivicVoterKey(),p_helpful:helpful
+  });
+  if(error)throw error;
+  message.textContent="Thank you. Your feedback has been recorded. You can change your choice later using this browser.";
+  await loadCivicFeedbackTotals(responseId,counts);
+ }catch(error){
+  message.textContent="Your feedback could not be saved. Please try again.";
+ }finally{yes.disabled=false;no.disabled=false;}
+}
+
 const guidance={
 registration:{title:"Voter registration",text:"Registration windows and eligibility rules can change. Check INEC's current announcements and official registration portal before taking action. Do not share your personal identification details with unofficial websites.",url:"https://www.inecnigeria.org/"},
 pvc:{title:"Permanent Voter's Card (PVC)",text:"For collection, replacement, or other PVC questions, consult current INEC guidance. Requirements and available services may vary by process and election cycle. Never pay an unofficial agent or publish your card details online.",url:"https://www.inecnigeria.org/"},
