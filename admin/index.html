@@ -110,17 +110,29 @@ async function loadQuestions(){
   [['draft','Save as draft'],['published','Publish response']].forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;responseStatus.append(option);});
   responseStatus.value=responseMap.get(x.id)?.status||'draft';
   const responseSave=document.createElement('button');responseSave.type='button';responseSave.textContent=responseMap.has(x.id)?'Save response':'Create response';
+  const responseMessage=document.createElement('div');responseMessage.className='message';responseMessage.setAttribute('role','status');responseMessage.setAttribute('aria-live','polite');responseMessage.style.display='none';
   responseSave.addEventListener('click',async()=>{
-   const answer=responseInput.value.trim();if(!answer){showMessage('questionsList','Please write a response before saving.',true);return;}
-   responseSave.disabled=true;responseSave.textContent='Saving…';
-   const {data:authData}=await client.auth.getUser();
-   const record={question_id:x.id,response:answer,status:responseStatus.value,created_by:authData.user?.id||null,updated_at:new Date().toISOString()};
-   const {error}=await client.from('civic_responses').upsert(record,{onConflict:'question_id'});
-   if(error){showMessage('questionsList','Could not save response: '+error.message,true);responseSave.disabled=false;responseSave.textContent=responseMap.has(x.id)?'Save response':'Create response';return;}
-   showMessage('questionsList',responseStatus.value==='published'?'Response published successfully.':'Response saved as a draft.');
-   await loadQuestions();
+   const answer=responseInput.value.trim();
+   if(!answer){responseMessage.textContent='Please write a response before saving.';responseMessage.className='message error';responseMessage.style.display='block';return;}
+   responseSave.disabled=true;responseSave.textContent='Saving…';responseMessage.style.display='none';
+   try{
+    const {data:authData,error:authError}=await client.auth.getUser();
+    if(authError)throw authError;
+    if(!authData?.user)throw new Error('Your administrator session has expired. Please sign in again.');
+    const record={question_id:x.id,response:answer,status:responseStatus.value,created_by:authData.user.id,updated_at:new Date().toISOString()};
+    const {error:saveError}=await client.from('civic_responses').upsert(record,{onConflict:'question_id'});
+    if(saveError)throw saveError;
+    responseMessage.textContent=responseStatus.value==='published'?'Response published successfully.':'Response saved as a draft.';
+    responseMessage.className='message';responseMessage.style.display='block';
+    responseSave.textContent='Saved';responseSave.disabled=false;
+    await loadQuestions();
+   }catch(err){
+    responseMessage.textContent='Could not save response: '+(err?.message||String(err));
+    responseMessage.className='message error';responseMessage.style.display='block';
+    responseSave.disabled=false;responseSave.textContent=responseMap.has(x.id)?'Save response':'Create response';
+   }
   });
-  el.append(q,meta,controls,responseLabel,responseInput,responseStatus,responseSave);
+  el.append(q,meta,controls,responseLabel,responseInput,responseStatus,responseSave,responseMessage);
   $('questionsList').append(el);
  });
 }
