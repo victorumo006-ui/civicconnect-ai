@@ -486,6 +486,32 @@ function checkClaim(){
  if(!claim){box.textContent="Enter a claim or message first. Do not include private voter details.";return;}
  box.textContent="Claim received for a manual verification workflow. This prototype cannot determine whether it is true or false.\n\n1. Find the original post or announcement.\n2. Check whether INEC has published the same information on its official website or verified channels.\n3. Check the date, location, and context.\n4. Compare with credible independent reporting.\n5. If you cannot confirm it, label it “unverified” and avoid forwarding it as fact.\n\nOfficial starting point: https://www.inecnigeria.org/";
 }
+  // Synchronise CivicConnect language selectors
+const mainLanguage = document.getElementById("languageSelect");
+const assistantLanguage = document.getElementById("language");
+
+function syncCivicLanguage(selectedLanguage) {
+  if (mainLanguage) mainLanguage.value = selectedLanguage;
+  if (assistantLanguage) assistantLanguage.value = selectedLanguage;
+
+  localStorage.setItem("civicconnect_language", selectedLanguage);
+}
+
+const savedLanguage = localStorage.getItem("civicconnect_language") || "en";
+
+if (mainLanguage) {
+  mainLanguage.value = savedLanguage;
+  mainLanguage.addEventListener("change", function() {
+    syncCivicLanguage(this.value);
+  });
+}
+
+if (assistantLanguage) {
+  assistantLanguage.value = savedLanguage;
+  assistantLanguage.addEventListener("change", function() {
+    syncCivicLanguage(this.value);
+  });
+}
 </script>
 </body>
 </html>
