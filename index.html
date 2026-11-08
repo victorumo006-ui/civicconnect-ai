@@ -148,7 +148,7 @@ footer a{color:#f3c65f}
 <label for="language">Language</label>
 <select id="language">
   <option value="en">English (Default)</option>
-  <option value="ib">Ibibio (Coming soon)</option>
+  <option value="ib">Ibibio</option>
   <option value="ig">Igbo (Coming soon)</option>
   <option value="yo">Yoruba (Coming soon)</option>
   <option value="ha">Hausa (Coming soon)</option>
@@ -426,7 +426,6 @@ async function sendCivicFeedback(responseId,helpful,yes,no,counts,message){
   message.textContent="Your feedback could not be saved. Please try again.";
  }finally{yes.disabled=false;no.disabled=false;}
 }
-
 const guidance={
 registration:{title:"Voter registration",text:"Registration windows and eligibility rules can change. Check INEC's current announcements and official registration portal before taking action. Do not share your personal identification details with unofficial websites.",url:"https://www.inecnigeria.org/"},
 pvc:{title:"Permanent Voter's Card (PVC)",text:"For collection, replacement, or other PVC questions, consult current INEC guidance. Requirements and available services may vary by process and election cycle. Never pay an unofficial agent or publish your card details online.",url:"https://www.inecnigeria.org/"},
@@ -540,10 +539,9 @@ function checkClaim(){
  box.textContent="Claim received for a manual verification workflow. This prototype cannot determine whether it is true or false.\n\n1. Find the original post or announcement.\n2. Check whether INEC has published the same information on its official website or verified channels.\n3. Check the date, location, and context.\n4. Compare with credible independent reporting.\n5. If you cannot confirm it, label it “unverified” and avoid forwarding it as fact.\n\nOfficial starting point: https://www.inecnigeria.org/";
 }
  // Synchronise CivicConnect language selectors
-
 const mainLanguage = document.getElementById("languageSelect");
 const assistantLanguage = document.getElementById("language");
-
+  
 const navigationLabels = {
   en: {
     navAssistant: "Civic assistant",
