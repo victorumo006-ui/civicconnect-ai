@@ -428,6 +428,40 @@ results:{title:"Election results",text:"Check official INEC result announcements
 report:{title:"Reporting an issue",text:"Record what happened, when and where it occurred, and preserve original evidence without putting yourself at risk. Use the relevant official reporting channel or contact appropriate authorities. Avoid publishing private information about other people.",url:"https://www.inecnigeria.org/"}
 };
 function answerQuestion(){
+  recordCivicUsage("assistant:topic_guidance");
+
+  const key = document.getElementById("question").value;
+  const lang = document.getElementById("language").value;
+  const item = guidance[key];
+  const box = document.getElementById("answer");
+
+  box.classList.remove("hidden");
+
+  if (!item) {
+    box.textContent = "Please select a civic topic first.";
+    return;
+  }
+
+  if (lang !== "en") {
+    const languages = {
+      ib: "Ibibio",
+      ig: "Igbo",
+      yo: "Yoruba",
+      ha: "Hausa",
+      pcm: "Nigerian Pidgin"
+    };
+
+    box.textContent =
+      languages[lang] +
+      " translation is coming soon. To avoid inaccurate civic information, please select English for now and consult the official INEC source.";
+    return;
+  }
+
+  box.textContent =
+    item.title + "\n\n" +
+    item.text + "\n\nOfficial source: " +
+    item.url;
+}
  recordCivicUsage("assistant:topic_guidance");
  const key=document.getElementById("question").value,lang=document.getElementById("language").value,item=guidance[key],box=document.getElementById("answer");
  box.classList.remove("hidden");
