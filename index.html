@@ -99,14 +99,21 @@ footer a{color:#f3c65f}
 <header>
 <nav class="nav" aria-label="Main navigation">
 <a class="brand" href="#" aria-label="CivicConnect AI home"><span class="logo" aria-hidden="true">C</span><span>CivicConnect <em>AI</em></span></a>
-<div class="navlinks"><a href="#assistant">Civic assistant</a><a href="#verify">Verify a claim</a><a href="#sources">Official source</a><a href="#verification">Information & Verification</a><a href="#about">About</a><a href="#privacy">Privacy & Disclaimer</a></div> 
+<div class="navlinks">
+  <a id="navAssistant" href="#assistant">Civic assistant</a>
+  <a id="navVerify" href="#verify">Verify a claim</a>
+  <a id="navSources" href="#sources">Official source</a>
+  <a id="navVerification" href="#verification">Information & Verification</a>
+  <a id="navAbout" href="#about">About</a>
+  <a id="navPrivacy" href="#privacy">Privacy & Disclaimer</a>
+</div>
 <a href="#contact">Contact</a>
 <span class="status">Early prototype · Demo guidance</span>
   <div class="language-selector">
   <label for="languageSelect">Language:</label>
   <select id="languageSelect" aria-label="Select language">
     <option value="en" selected>English</option>
-    <option value="ib">Ibibio (Coming soon)</option>
+    <option value="ib">Ibibio</option>
     <option value="ig">Igbo (Coming soon)</option>
     <option value="yo">Yoruba (Coming soon)</option>
     <option value="ha">Hausa (Coming soon)</option>
@@ -532,15 +539,52 @@ function checkClaim(){
  if(!claim){box.textContent="Enter a claim or message first. Do not include private voter details.";return;}
  box.textContent="Claim received for a manual verification workflow. This prototype cannot determine whether it is true or false.\n\n1. Find the original post or announcement.\n2. Check whether INEC has published the same information on its official website or verified channels.\n3. Check the date, location, and context.\n4. Compare with credible independent reporting.\n5. If you cannot confirm it, label it “unverified” and avoid forwarding it as fact.\n\nOfficial starting point: https://www.inecnigeria.org/";
 }
-  // Synchronise CivicConnect language selectors
+ // Synchronise CivicConnect language selectors
+
 const mainLanguage = document.getElementById("languageSelect");
 const assistantLanguage = document.getElementById("language");
+
+const navigationLabels = {
+  en: {
+    navAssistant: "Civic assistant",
+    navVerify: "Verify a claim",
+    navSources: "Official source",
+    navVerification: "Information & Verification",
+    navAbout: "About",
+    navPrivacy: "Privacy & Disclaimer"
+  },
+
+  ib: {
+    navAssistant: "N̄kọri aban̄ade mme owo ke obio",
+    navVerify: "N̄yeme akpanikọ ke se owo ọkọdọhọde",
+    navSources: "Official ebe akụkọ",
+    navVerification: "Akụkọ ye N̄yeme Akpanikọ",
+    navAbout: "Aban̄ade",
+    navPrivacy: "N̄kpọ Idem ye Mme N̄kpọ Emi Ẹdọhọde"
+  }
+};
+
+function applyNavigationLanguage(lang) {
+  const labels = navigationLabels[lang];
+
+  if (!labels) return;
+
+  Object.keys(labels).forEach(function(id) {
+    const element = document.getElementById(id);
+
+    if (element) {
+      element.textContent = labels[id];
+    }
+  });
+}
 
 function syncCivicLanguage(selectedLanguage) {
   if (mainLanguage) mainLanguage.value = selectedLanguage;
   if (assistantLanguage) assistantLanguage.value = selectedLanguage;
 
   localStorage.setItem("civicconnect_language", selectedLanguage);
+
+  applyNavigationLanguage(selectedLanguage);
 }
 
 const savedLanguage = localStorage.getItem("civicconnect_language") || "en";
@@ -557,6 +601,9 @@ if (assistantLanguage) {
   assistantLanguage.addEventListener("change", function() {
     syncCivicLanguage(this.value);
   });
+}
+
+applyNavigationLanguage(savedLanguage);
 }
 </script>
 </body>
