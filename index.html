@@ -427,6 +427,17 @@ polling:{title:"Polling unit information",text:"Use INEC's official tools or ann
 results:{title:"Election results",text:"Check official INEC result announcements and published result resources. Early posts, cropped images, and unofficial tallies may be incomplete. Compare the location, timestamp, and original source.",url:"https://www.inecnigeria.org/"},
 report:{title:"Reporting an issue",text:"Record what happened, when and where it occurred, and preserve original evidence without putting yourself at risk. Use the relevant official reporting channel or contact appropriate authorities. Avoid publishing private information about other people.",url:"https://www.inecnigeria.org/"}
 };
+  const ibibioGuidance = {
+  registration: "Ekikere mme owo ẹkewetde ke n̄kpọ votu ye mme iwu emi ẹdọhọde owo ekeme ndinyene ẹkeme ndibọp. Kụt mme ọkpọkpọ akụkọ INEC ye official registration portal esie mbemiso afo anam n̄kpọ. Mìnyụn̄ kpọk mme data emi ẹdọhọde owo imọ ke idem fo ye mme website emi mîdịghe official.",
+
+  pvc: "Ke ndibọp PVC fo, ndibọp eyen-abañ esie, m̀mọ ndusụk mbụme aban̄ade PVC, nam akpanikọ ye mme ntọt-edu INEC emi ẹdụkde ke ini emi. Mme se ẹkpenamde ye mme service emi ẹdude ekeme ndibadịk ke ntak usoro ye ini election. Mịkpāk utūn̄ owo emi INEC mîdụkde ke official agent, ndien mîdịk mme data kaadị fo ke internet.",
+
+  polling: "Kụt mme official tools m̀mọ mme ọkpọkpọ akụkọ INEC man ọfiọk polling unit fo ye mgbanwe ndomokiet emi ẹkebụpde. Mînyịme ke screenshot m̀mọ message emi owo ọzọ ẹkotde ẹnyụn̄ ẹdọhọde afo, ke imọkpọ; kụt ụbọchị ye ebe mbụ emi akụkọ oro ọkọride.",
+
+  results: "Kụt mme ọkpọkpọ akụkọ INEC aban̄ade utịp election ye mme official result resources emi ẹdụkde. Mme post emi ẹdụkde ke mbemiso, mme picture emi ẹkebịpde, ye mme utịp emi mîdịghe official ekeme ndidụk ndomokiet. Tụnyere ebiet emi akụkọ oro aban̄ade, ini emi ẹkedọhọde ke ẹdụkde enye, ye ebe mbụ emi akụkọ oro ọkọride.",
+
+  report: "Wet se iketịbe, ini ye ebiet emi iketịbede, nyụn̄ dọk mme ẹwụt mbụme emi ke akpanikọ, ke mînyụn̄ kpọk idem fo ke mfịna. Kụt official channel emi ẹdọhọde owo ekeme ndibọn̄o mbụme oro, m̀mọ kpọk mme authority emi ẹdude ke ufọk-ikpe. Mînyụn̄ dọk mme se ẹdọhọde owo ke idem mmọ ke internet."
+};
 function answerQuestion(){
   recordCivicUsage("assistant:topic_guidance");
 
@@ -442,9 +453,16 @@ function answerQuestion(){
     return;
   }
 
+  if (lang === "ib") {
+    box.textContent =
+      item.title + "\n\n" +
+      ibibioGuidance[key] + "\n\n" +
+      "Official source: " + item.url;
+    return;
+  }
+
   if (lang !== "en") {
     const languages = {
-      ib: "Ibibio",
       ig: "Igbo",
       yo: "Yoruba",
       ha: "Hausa",
@@ -453,7 +471,7 @@ function answerQuestion(){
 
     box.textContent =
       languages[lang] +
-      " translation is coming soon. To avoid inaccurate civic information, please select English for now and consult the official INEC source.";
+      " translation is coming soon. Please select English for now.";
     return;
   }
 
@@ -461,7 +479,6 @@ function answerQuestion(){
     item.title + "\n\n" +
     item.text + "\n\nOfficial source: " +
     item.url;
- 
 }
 async function submitTypedQuestion(){
  recordCivicUsage("assistant:typed_question");
