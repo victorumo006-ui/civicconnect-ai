@@ -461,17 +461,12 @@ function answerQuestion(){
     item.title + "\n\n" +
     item.text + "\n\nOfficial source: " +
     item.url;
-}
- recordCivicUsage("assistant:topic_guidance");
- const key=document.getElementById("question").value,lang=document.getElementById("language").value,item=guidance[key],box=document.getElementById("answer");
- box.classList.remove("hidden");
- if(lang==="ib"){box.textContent="Ibibio support is planned but not enabled in this prototype. To avoid giving you an inaccurate translation, please use the English guidance and check the official INEC source.";return;}
- box.textContent=item.title+"\n\n"+item.text+"\n\nOfficial source: "+item.url;
+ 
 }
 async function submitTypedQuestion(){
  recordCivicUsage("assistant:typed_question");
  const question=document.getElementById("typedquestion").value.trim(),box=document.getElementById("typedanswer");
- box.classList.remove("hidden");
+ box.classList.remove("hidden"); 
  if(!question){box.textContent="Please type a civic question first.";return;}
  if(question.length>3000){box.textContent="Please keep your question below 3,000 characters.";return;}
  const turnstileToken=window.turnstile&&window.turnstile.getResponse?window.turnstile.getResponse():"";
