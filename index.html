@@ -139,7 +139,14 @@ footer a{color:#f3c65f}
 <section class="panel" id="assistant">
 <div class="panel-top"><span class="panel-icon" aria-hidden="true">?</span><div><h3>Ask a civic question</h3><p class="sub">Choose a topic to see sample guidance and an official source.</p></div></div>
 <label for="language">Language</label>
-<select id="language"><option value="en">English</option><option value="ib">Ibibio (planned; not enabled in this demo)</option></select>
+<select id="language">
+  <option value="en">English (Default)</option>
+  <option value="ib">Ibibio (Coming soon)</option>
+  <option value="ig">Igbo (Coming soon)</option>
+  <option value="yo">Yoruba (Coming soon)</option>
+  <option value="ha">Hausa (Coming soon)</option>
+  <option value="pcm">Nigerian Pidgin (Coming soon)</option>
+</select>
 <label for="question">Choose a topic</label>
 <select id="question"><option value="registration">Voter registration</option><option value="pvc">Permanent Voter's Card (PVC)</option><option value="polling">Polling unit information</option><option value="results">Election results</option><option value="report">How to report an issue</option></select>
 <button class="btn primary" type="button" onclick="answerQuestion()">Show topic guidance <span aria-hidden="true">→</span></button>
