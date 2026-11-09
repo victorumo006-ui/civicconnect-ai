@@ -433,7 +433,7 @@ polling:{title:"Polling unit information",text:"Use INEC's official tools or ann
 results:{title:"Election results",text:"Check official INEC result announcements and published result resources. Early posts, cropped images, and unofficial tallies may be incomplete. Compare the location, timestamp, and original source.",url:"https://www.inecnigeria.org/"},
 report:{title:"Reporting an issue",text:"Record what happened, when and where it occurred, and preserve original evidence without putting yourself at risk. Use the relevant official reporting channel or contact appropriate authorities. Avoid publishing private information about other people.",url:"https://www.inecnigeria.org/"}
 };
-  const ibibioGuidance = {
+  const efikGuidance = {
   registration: "Ekikere mme owo ẹkewetde ke n̄kpọ votu ye mme iwu emi ẹdọhọde owo ekeme ndinyene ẹkeme ndibọp. Kụt mme ọkpọkpọ akụkọ INEC ye official registration portal esie mbemiso afo anam n̄kpọ. Mìnyụn̄ kpọk mme data emi ẹdọhọde owo imọ ke idem fo ye mme website emi mîdịghe official.",
 
   pvc: "Ke ndibọp PVC fo, ndibọp eyen-abañ esie, m̀mọ ndusụk mbụme aban̄ade PVC, nam akpanikọ ye mme ntọt-edu INEC emi ẹdụkde ke ini emi. Mme se ẹkpenamde ye mme service emi ẹdude ekeme ndibadịk ke ntak usoro ye ini election. Mịkpāk utūn̄ owo emi INEC mîdụkde ke official agent, ndien mîdịk mme data kaadị fo ke internet.",
@@ -462,7 +462,7 @@ function answerQuestion(){
   if (lang === "ib") {
     box.textContent =
       item.title + "\n\n" +
-      ibibioGuidance[key] + "\n\n" +
+      efikGuidance[key] + "\n\n" +
       "Official source: " + item.url;
     return;
   }
