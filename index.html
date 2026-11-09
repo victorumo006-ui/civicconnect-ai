@@ -154,12 +154,18 @@ footer a{color:#f3c65f}
   <option value="ha">Hausa (Coming soon)</option>
   <option value="pcm">Nigerian Pidgin (Coming soon)</option>
 </select>
-<label for="question">Choose a topic</label>
-<select id="question"><option value="registration">Voter registration</option><option value="pvc">Permanent Voter's Card (PVC)</option><option value="polling">Polling unit information</option><option value="results">Election results</option><option value="report">How to report an issue</option></select>
+<label for="question" data-i18n="chooseTopic">Choose a topic</label>
+<select id="question">
+  <option value="registration" data-i18n="registration">Voter registration</option>
+  <option value="pvc" data-i18n="pvc">Permanent Voter's Card (PVC)</option>
+  <option value="polling" data-i18n="polling">Polling unit information</option>
+  <option value="results" data-i18n="results">Election results</option>
+  <option value="report" data-i18n="report">How to report an issue</option>
+</select>
 <button class="btn primary" type="button" onclick="answerQuestion()">Show topic guidance <span aria-hidden="true">→</span></button>
 <div id="answer" class="answer hidden" aria-live="polite"></div>
 <div class="question-entry">
-<label for="typedquestion">Or type your own civic question</label>
+<label for="typedquestion" data-i18n="ownQuestion">Or type your own civic question</label>
 <textarea id="typedquestion" placeholder="Type your civic question here..."></textarea>
 <div class="cf-turnstile" data-sitekey="0x4AAAAAAFuFo1NILMC5bYih"></div>
 <p class="source">Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.</p>
@@ -173,7 +179,10 @@ footer a{color:#f3c65f}
 <p class="sub">This tool does not automatically label content true or false. It guides you through a safe verification process.</p>
 <label for="claim">Paste or describe the claim</label>
 <textarea id="claim" placeholder="Example: A message says the polling date has changed..."></textarea>
-<button class="btn primary" type="button" onclick="checkClaim()">Get verification steps <span aria-hidden="true">→</span></button>
+<button class="btn primary" type="button" onclick="answerQuestion()">
+  <span data-i18n="showGuidance">Show topic guidance</span>
+  <span aria-hidden="true">→</span>
+</button>
 <div id="claimanswer" class="answer hidden" aria-live="polite"></div>
 <div class="checklist" aria-labelledby="checklist-title">
 <h4 id="checklist-title">Your verification checklist</h4>
@@ -561,7 +570,65 @@ const navigationLabels = {
   navPrivacy: "Idem-ndụn̄ ye ntịn̄nnọ"
   }
 };
+const interfaceLabels = {
+  en: {
+    chooseTopic: "Choose a topic",
+    registration: "Voter registration",
+    pvc: "Permanent Voter's Card (PVC)",
+    polling: "Polling unit information",
+    results: "Election results",
+    report: "How to report an issue",
+    showGuidance: "Show topic guidance",
+    ownQuestion: "Or type your own civic question",
+    questionPlaceholder: "Type your civic question here...",
+    privacyNotice: "Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.",
+    submitQuestion: "Submit question",
+    checkClaim: "Check a claim carefully",
+    verificationIntro: "Use a simple process before sharing election-related information.",
+    verificationNotice: "This tool does not automatically label content true or false. It guides you through a safe verification process.",
+    pasteClaim: "Paste or describe the claim",
+    claimPlaceholder: "Example: A message says the polling date has changed...",
+    verificationSteps: "Get verification steps",
+    checklistTitle: "Your verification checklist",
+    checklistIntro: "Tick each step after you complete it.",
+    step1: "I found the original source of the claim.",
+    step2: "I checked the date and location.",
+    step3: "I checked INEC's official website or verified channels.",
+    step4: "I compared the claim with credible independent reporting.",
+    step5: "I will not share it as fact if it remains unverified.",
+    resetChecklist: "Reset checklist",
+    checklistNotice: "Completing this checklist does not prove a claim is true. It helps you review it carefully."
+  },
 
+  efi: {
+    chooseTopic: "Seetop ikọ",
+    registration: "N̄wed mme owo ẹnyene votu",
+    pvc: "Kaad votu emi owo enyenede ke ini niile",
+    polling: "Akụkọ aban̄ade ebiet votu",
+    results: "Utịp election",
+    report: "Nso n̄kpenam man n̄dọhọ aban̄ade mfịna",
+    showGuidance: "Wụt edu emi ẹdọhọde",
+    ownQuestion: "M̀mọ wet mbụme fo aban̄ade obio",
+    questionPlaceholder: "Wet mbụme fo aban̄ade obio do...",
+    privacyNotice: "Ẹkeme ndinyene mbụme fo man onye emi edinamde ukara CivicConnect akpụt enye. Ewetke nọmba PVC fo, password, nọmba phone, m̀mọ mme n̄kpọ idem fo. Eketịmke mme akpanikọ idem fo emi ẹdọhọde owo mîkpenyene ndifiọk.",
+    submitQuestion: "Dọk mbụme",
+    checkClaim: "N̄yeme ikọ emi ke akpanikọ",
+    verificationIntro: "Kpọk usụn̄ emi ke mbemiso afo osio akụkọ aban̄ade election.",
+    verificationNotice: "Usụn̄ emi mînyịme ndidọhọ ke mbụme oro akpanikọ m̀mọ ikọikọ. En̄wọrọ afo ke usụn̄ emi ẹyemede akpanikọ ke nsụhọde.",
+    pasteClaim: "Dọk m̀mọ kọwa ikọ emi afo oyom ndiyeme",
+    claimPlaceholder: "Uwem: Message ọdọhọ ke ẹbanwe ụbọchị votu...",
+    verificationSteps: "N̄yene mme usụn̄ ndiyeme akpanikọ",
+    checklistTitle: "Mme n̄kpọ emi akpanikọ",
+    checklistIntro: "Sọp akara ke ini afo okụtde ke afo anam item kiet kiet.",
+    step1: "N̄kụt ebe mbụ emi ikọ emi ọkọride.",
+    step2: "N̄yem ụbọchị ye ebiet.",
+    step3: "N̄yem official website INEC m̀mọ mme official channel esie.",
+    step4: "N̄tụnyere ikọ emi ye mme akụkọ mîdịghe official emi ẹnyịmede.",
+    step5: "M̀mọ́ n̄dọhọ ikọ emi ke akpanikọ ke mînyịme ẹyeme enye.",
+    resetChecklist: "Sọp checklist ẹtọn̄ọ",
+    checklistNotice: "Ndikụre checklist emi mînyịme ndifiọk ke ikọ emi akpanikọ. En̄wọrọ afo ndiyem enye ke akpanikọ."
+  }
+};
 function applyNavigationLanguage(lang) {
   const labels = navigationLabels[lang];
 
