@@ -166,10 +166,15 @@ footer a{color:#f3c65f}
 <div id="answer" class="answer hidden" aria-live="polite"></div>
 <div class="question-entry">
 <label for="typedquestion" data-i18n="ownQuestion">Or type your own civic question</label>
-<textarea id="typedquestion" placeholder="Type your civic question here..."></textarea>
+<textarea id="typedquestion"
+  placeholder="Type your civic question here..."
+  data-i18n-placeholder="questionPlaceholder"></textarea>
 <div class="cf-turnstile" data-sitekey="0x4AAAAAAFuFo1NILMC5bYih"></div>
-<p class="source">Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.</p>
-<button class="btn primary" type="button" onclick="submitTypedQuestion()">Submit question <span aria-hidden="true">→</span></button>
+<p class="source" data-i18n="privacyNotice">Your question may be stored for the CivicConnect administrator to review. Do not enter your PVC number, passwords, phone numbers, or other private details. Do not include sensitive personal information.</p>
+<button class="btn primary" type="button" onclick="submitTypedQuestion()">
+  <span data-i18n="submitQuestion">Submit question</span>
+  <span aria-hidden="true">→</span>
+</button>
 <div id="typedanswer" class="answer hidden" aria-live="polite"></div>
 </div>
 </section>
@@ -632,16 +637,36 @@ const interfaceLabels = {
 function applyNavigationLanguage(lang) {
   const labels = navigationLabels[lang];
 
-  if (!labels) return;
+  if (labels) {
+    Object.keys(labels).forEach(function(id) {
+      const element = document.getElementById(id);
 
-  Object.keys(labels).forEach(function(id) {
-    const element = document.getElementById(id);
+      if (element) {
+        element.textContent = labels[id];
+      }
+    });
+  }
 
-    if (element) {
-      element.textContent = labels[id];
-    }
-  });
-}
+  const interfaceText = interfaceLabels[lang];
+
+  if (interfaceText) {
+    document.querySelectorAll("[data-i18n]").forEach(function(element) {
+      const key = element.getAttribute("data-i18n");
+
+      if (interfaceText[key]) {
+        element.textContent = interfaceText[key];
+      }
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function(element) {
+      const key = element.getAttribute("data-i18n-placeholder");
+
+      if (interfaceText[key]) {
+        element.setAttribute("placeholder", interfaceText[key]);
+      }
+    });
+  }
+      }
 
 function syncCivicLanguage(selectedLanguage) {
   if (mainLanguage) mainLanguage.value = selectedLanguage;
